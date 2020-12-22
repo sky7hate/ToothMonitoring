@@ -35,25 +35,6 @@ if __name__ == '__main__':
     teeth_row_mesh = Mesh.TeethRowMesh(teeth_file_folder, False)
     row_mesh = teeth_row_mesh.row_mesh
 
-    # for i in range(4):
-    #     teeth_row_mesh.translate(ch.array([-0.05*(i+1)/4, 0, 0]), i+2)  # translate an individual tooth
-    # for i in range(4):
-    #     teeth_row_mesh.translate(ch.array([0.05*(i+1)/4, 0, 0]), i+8)
-    teeth_row_mesh.translate(ch.array([0, 0.002, 0]), 0)  # translate an individual tooth
-    teeth_row_mesh.translate(ch.array([0, 0.003, 0]), 1)
-    teeth_row_mesh.translate(ch.array([0, 0.0035, 0]), 4)
-    teeth_row_mesh.translate(ch.array([0, 0.0015, 0]), 6)
-    teeth_row_mesh.translate(ch.array([0, 0.003, 0]), 7)
-    teeth_row_mesh.translate(ch.array([0, 0.002, 0]), 8)
-    # teeth_row_mesh.translate(ch.array([0, 0.0015, 0]), 10)
-    # teeth_row_mesh.rotate(ch.array([0, 0.05, 0]), 10)  # rotate 1 means 60 degree
-    teeth_row_mesh.rotate(ch.array([0, -0.004, 0]), 4)  # rotate 1 means 60 degree
-    teeth_row_mesh.rotate(ch.array([0, -0.004, 0]), 0)
-    teeth_row_mesh.rotate(ch.array([0, 0.009, 0]), 2)
-    teeth_row_mesh.rotate(ch.array([0, -0.008, 0]), 1)
-    teeth_row_mesh.rotate(ch.array([0, -0.007, 0]), 9)
-    teeth_row_mesh.rotate(ch.array([0, -0.006, 0]), 6)
-
     moved_mesh = Mesh.TeethRowMesh(moved_mesh_folder, True)
     # t0 = ch.asarray(teeth_row_mesh.positions_in_row)
 
