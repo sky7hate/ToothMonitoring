@@ -35,6 +35,7 @@ if __name__ == '__main__':
 
     print(teeth_file_folder)
 
+    #read tooth mesh
     teeth_row_mesh = Mesh.TeethRowMesh(teeth_file_folder, False)
     row_mesh = teeth_row_mesh.row_mesh
 
@@ -63,6 +64,7 @@ if __name__ == '__main__':
     # V_comb = ch.vstack([ti_list[i] + Vi_list[i].mean(axis=0) + (Vi_list[i] - Vi_list[i].mean(axis=0)).dot(Rodrigues(Ri_list[i])) for i in range(numTooth)])
     # V_row = t_row + V_comb.mean(axis=0) + (V_comb - V_comb.mean(axis=0)).dot(Rodrigues(R_row))
 
+    #Projection by OpenDR
     w, h = (640, 480)
 
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
@@ -103,8 +105,8 @@ if __name__ == '__main__':
 
 
 
-    # create the Energy
 
+    #Sample points
     contour1 = deepcopy(rn.r)
     sample_pts = []
     # print contour1.size
@@ -120,20 +122,21 @@ if __name__ == '__main__':
             cc += 1
     print index, cc
 
-    # fig = plt.figure()
-    # ax = fig.add_subplot(111, projection='3d')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
 
+    #Calculate sample points' image coordinates (3D coordinates in projection plane)
     reversed_imgpts = []
     for i in range(index):
         # print sample_pts[i]
         tmp = [float(320-sample_pts[i][1])/320, float(240-sample_pts[i][0])/320, 1]
         # print tmp
         reversed_imgpts.append(tmp)
-        # ax.scatter(tmp[0], tmp[1], tmp[2], marker= 'o')
+        ax.scatter(tmp[0], tmp[1], tmp[2], marker= 'o')
 
-    # plt.show()
+    plt.show()
 
-
+    #Calculate Vertices coordinates in Camera coordinate system
     V_row1 = deepcopy(V_row.r)
     rt = np.array([0, -0.3, 0]) * np.pi / 2
     tmpr = R.from_rotvec(np.array([0, -0.3, 0]) * np.pi / 2)
@@ -159,6 +162,7 @@ if __name__ == '__main__':
 
     # Mesh.save_to_obj('result/V_row_camera.obj', V_row_camera, row_mesh.f)
 
+    #Ray tracing to find back-projection 3D vertices
     mesh_camera = trimesh.Trimesh(vertices=V_row_camera, faces=row_mesh.f)
     # print mesh_camera.is_empty
     origins = np.zeros((index, 3), dtype='float32')

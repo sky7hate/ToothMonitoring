@@ -2,77 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cabfd910-7879-4436-89a4-d88da8cb4041" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/ToothMonitoring.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/11.ply" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/11.stl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/FitContour.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/GetContour.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mesh.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Projection.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Segmentation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/demo_test/data/nasa_earth.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/demo_test/data/nasa_earth.mtl" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/demo_test/data/nasa_earth.obj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/demo_test/slider_demo.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/helloOpenDR.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/mesh_croper.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/.travis.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/LICENSE.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/MANIFEST.in" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/Makefile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/README.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/camera.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/common.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/Makefile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/autogen.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/ctx_base.pyx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/ctx_mac.pyx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/ctx_mac_internal.c" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/ctx_mac_internal.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/ctx_mesa.pyx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/draw_triangle_shaders_2_1.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/draw_triangle_shaders_3_2.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/fix_warnings.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/contexts/gl_includes.h" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/cvwrap.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/dummy.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/everything.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/filters.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/geometry.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/lighting.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/occlusion_test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/renderer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/rogrenderer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/serialization.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/setup.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/simple.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/slider_demo.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/test_camera.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/test_depth_renderer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/test_dr/Makefile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/test_dr/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/test_geometry.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/test_renderer.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/test_sh.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/topology.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/util_tests.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/opendr-master/version.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/procrustes.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pyOpenGLRender.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/vtkRender.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Projection.py" beforeDir="false" afterPath="$PROJECT_DIR$/Projection.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -85,7 +16,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Mesh.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
+            <state relative-caret-position="2415">
               <caret line="167" column="22" selection-start-line="167" selection-start-column="22" selection-end-line="167" selection-end-column="22" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
@@ -97,8 +28,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/FitContour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-150">
-              <caret line="53" column="36" lean-forward="true" selection-start-line="53" selection-start-column="36" selection-end-line="53" selection-end-column="36" />
+            <state relative-caret-position="510">
+              <caret line="53" column="36" selection-start-line="53" selection-start-column="36" selection-end-line="53" selection-end-column="36" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -109,29 +40,26 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/opendr/camera.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
+            <state relative-caret-position="2070">
               <caret line="144" column="32" selection-start-line="144" selection-start-column="19" selection-end-line="144" selection-end-column="32" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="35" column="38" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
-              <folding>
-                <element signature="e#0#11#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="60">
+              <caret line="16" column="11" selection-start-line="16" selection-start-column="11" selection-end-line="16" selection-end-column="11" />
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Projection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="645">
-              <caret line="151" column="18" lean-forward="true" selection-start-line="151" selection-start-column="18" selection-end-line="151" selection-end-column="18" />
+            <state relative-caret-position="435">
+              <caret line="164" column="5" selection-start-line="164" selection-start-column="5" selection-end-line="164" selection-end-column="5" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -203,15 +131,15 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/Mesh.py" />
-        <option value="$PROJECT_DIR$/Projection.py" />
         <option value="$PROJECT_DIR$/FitContour.py" />
         <option value="$PROJECT_DIR$/test.py" />
+        <option value="$PROJECT_DIR$/Projection.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="396" />
-    <option name="y" value="27" />
+    <option name="x" value="142" />
+    <option name="y" value="43" />
     <option name="width" value="1181" />
     <option name="height" value="941" />
   </component>
@@ -221,7 +149,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -238,6 +165,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -345,12 +273,12 @@
     <frame x="396" y="27" width="1181" height="941" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.20051858" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.20051858" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.329602" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.329602" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39925373" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -372,6 +300,46 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="615">
           <caret line="41" column="4" selection-start-line="41" selection-start-column="4" selection-end-line="41" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/pyembree/mesh_construction.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/pyembree/rtcore_scene.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/trimesh/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="124" column="25" selection-start-line="124" selection-start-column="17" selection-end-line="124" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Mesh.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2415">
+          <caret line="167" column="22" selection-start-line="167" selection-start-column="22" selection-end-line="167" selection-end-column="22" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FitContour.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="510">
+          <caret line="53" column="36" selection-start-line="53" selection-start-column="36" selection-end-line="53" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/opendr/camera.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2070">
+          <caret line="144" column="32" selection-start-line="144" selection-start-column="19" selection-end-line="144" selection-end-column="32" />
         </state>
       </provider>
     </entry>
@@ -410,60 +378,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/opendr/camera.py">
+    <entry file="file://$PROJECT_DIR$/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="144" column="32" selection-start-line="144" selection-start-column="19" selection-end-line="144" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/pyembree/mesh_construction.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/pyembree/rtcore_scene.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/trimesh/base.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="124" column="25" selection-start-line="124" selection-start-column="17" selection-end-line="124" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Mesh.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="167" column="22" selection-start-line="167" selection-start-column="22" selection-end-line="167" selection-end-column="22" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="60">
+          <caret line="16" column="11" selection-start-line="16" selection-start-column="11" selection-end-line="16" selection-end-column="11" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Projection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="645">
-          <caret line="151" column="18" lean-forward="true" selection-start-line="151" selection-start-column="18" selection-end-line="151" selection-end-column="18" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FitContour.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-150">
-          <caret line="53" column="36" lean-forward="true" selection-start-line="53" selection-start-column="36" selection-end-line="53" selection-end-column="36" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="35" column="38" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
+        <state relative-caret-position="435">
+          <caret line="164" column="5" selection-start-line="164" selection-start-column="5" selection-end-line="164" selection-end-column="5" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
