@@ -122,19 +122,19 @@ if __name__ == '__main__':
             cc += 1
     print index, cc
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111, projection='3d')
 
     #Calculate sample points' image coordinates (3D coordinates in projection plane)
     reversed_imgpts = []
     for i in range(index):
         # print sample_pts[i]
-        tmp = [float(320-sample_pts[i][1])/320, float(240-sample_pts[i][0])/320, 1]
+        tmp = [float(sample_pts[i][1]-320)/320, float(240-sample_pts[i][0])/320, 1]
         # print tmp
         reversed_imgpts.append(tmp)
-        ax.scatter(tmp[0], tmp[1], tmp[2], marker= 'o')
+        # ax.scatter(tmp[0], tmp[1], tmp[2], marker= 'o')
 
-    plt.show()
+    # plt.show()
 
     #Calculate Vertices coordinates in Camera coordinate system
     V_row1 = deepcopy(V_row.r)
@@ -160,18 +160,34 @@ if __name__ == '__main__':
     V_row_camera = np.vstack(V_row_camera)
     # print V_row_camera.size
 
-    # Mesh.save_to_obj('result/V_row_camera.obj', V_row_camera, row_mesh.f)
+    # Mesh.save_to_obj('result/V_row1.obj', V_row1, row_mesh.f)
 
     #Ray tracing to find back-projection 3D vertices
     mesh_camera = trimesh.Trimesh(vertices=V_row_camera, faces=row_mesh.f)
+    # mesh_camera = trimesh.Trimesh(vertices=V_row1, faces=row_mesh.f)
     # print mesh_camera.is_empty
     origins = np.zeros((index, 3), dtype='float32')
     dirs = np.zeros((index, 3), dtype='float32')
     dirs += reversed_imgpts
     intersection_pts, index_ray, index_tri = mesh_camera.ray.intersects_location(origins, dirs, multiple_hits = False)
 
-    print intersection_pts
+    # ray_pts = []
+    # for k in range(10):
+    #     cur_pts = deepcopy(origins[k*100])
+    #     for i in range (10):
+    #         tmp = deepcopy(cur_pts)
+    #         ray_pts.append(tmp)
+    #         cur_pts += 0.2*dirs[k*100]
+            # print dirs[k*3], cur_pts
+    # ray_pts = np.vstack(ray_pts)
+    # print ray_pts.shape[0]
+    # print ray_pts
+    # Mesh.save_to_obj('result/ray_pts.obj', ray_pts, None)
 
+    # print intersection_pts, index_ray, index_tri
+    print origins.shape[0], dirs.shape[0], intersection_pts.shape[0], index_ray.size, index_tri.size
+
+    # for i in range()
 
     # observed1 = load_image(img1_file_path)
     # observed2 = load_image(img2_file_path)
