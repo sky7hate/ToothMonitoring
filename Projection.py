@@ -52,12 +52,12 @@ if __name__ == '__main__':
 
     Ri_list = [ch.zeros(3) for i in range(numTooth)]
     ti_list = [ch.zeros(3) for i in range(numTooth)]
-    # R_row = ch.zeros(3)
-    # t_row = ch.zeros(3)
+    R_row = ch.zeros(3)
+    t_row = ch.zeros(3)
     # R_row = ch.array([0, 0, 0.06])
     # t_row = ch.array([0, 0.06, 0])
-    R_row = ch.array([0, 0, 0.01])
-    t_row = ch.array([0, 0.01, 0])
+    # R_row = ch.array([0, 0, 0.01])
+    # t_row = ch.array([0, 0.01, 0])
     V_row = t_row + ch.vstack(
         [ti_list[i] + Vi_offset[i] + Vi_center[i].dot(Rodrigues(Ri_list[i])) for i in range(numTooth)]).dot(
         Rodrigues(R_row))
@@ -82,10 +82,14 @@ if __name__ == '__main__':
     #                                c=ch.array([w, h]) / 2.,
     #                                k=ch.zeros(5))
     # 12681
-    rt = ch.array([0, -0.3, 0]) * np.pi / 2
-    rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([1.2, 0.2, 0]), f=ch.array([w, w]) / 2.,
-                              c=ch.array([w, h]) / 2.,
-                              k=ch.zeros(5))
+    # rt = ch.array([0, -0.3, 0]) * np.pi / 2
+    # rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([1.2, 0.2, 0]), f=ch.array([w, w]) / 2.,
+    #                           c=ch.array([w, h]) / 2.,
+    #                           k=ch.zeros(5))
+    rt = ch.array([0, 0, 0]) * np.pi / 2
+    rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([-0.05, 0.2, -0.25]), f=ch.array([w, w]) / 2.,
+                               c=ch.array([w, h]) / 2.,
+                               k=ch.zeros(5))
     # 13282
     # rt = ch.array([0, -0.25, 0.1]) * np.pi/2
     # rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([0.7, 0.5, 0]), f=ch.array([w, w]) / 2.,
@@ -113,14 +117,18 @@ if __name__ == '__main__':
 
     cc = 0
     index = 0
-    for i in range(480):
-        for j in range(640):
-            if contour1[i, j, 0] > 0 & (cc % 3 == 0):
-                sample_pts.append([i, j])
-                contour1[i, j] = [1, 0, 0]
+    for i in range(640):
+        for j in range(480):
+            if contour1[j, i, 0] > 0 & (cc % 3 == 0):
+                sample_pts.append([j, i])
+                contour1[j, i] = [1, 0, 0]
                 index += 1
             cc += 1
     print index, cc
+
+    plt.imshow(contour1)
+    plt.show()
+    scipy.misc.imsave('result/contour1.jpg', contour1)
 
     # fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
@@ -129,7 +137,7 @@ if __name__ == '__main__':
     reversed_imgpts = []
     for i in range(index):
         # print sample_pts[i]
-        tmp = [float(sample_pts[i][1]-320)/320, float(240-sample_pts[i][0])/320, 1]
+        tmp = [float(sample_pts[i][1]-320)/320, float(sample_pts[i][0]-240)/320, 1]
         # print tmp
         reversed_imgpts.append(tmp)
         # ax.scatter(tmp[0], tmp[1], tmp[2], marker= 'o')
@@ -138,13 +146,17 @@ if __name__ == '__main__':
 
     #Calculate Vertices coordinates in Camera coordinate system
     V_row1 = deepcopy(V_row.r)
-    rt = np.array([0, -0.3, 0]) * np.pi / 2
-    tmpr = R.from_rotvec(np.array([0, -0.3, 0]) * np.pi / 2)
+    # rt = np.array([0, -0.3, 0]) * np.pi / 2
+    rt = ch.array([0, 0, 0])
+    tmpr = R.from_rotvec(rt)
+    W_to_Cr = R.from_rotvec(np.array([0, np.pi/2, 0]))
+    # r_mat = tmpr.as_dcm().dot(W_to_Cr.as_dcm())
     r_mat = tmpr.as_dcm()
-    t = np.array([1.2, 0.2, 0])
+    # t = np.array([1.2, 0.2, 0]).T
+    t = np.array([-0.05, 0.2, -0.25]).T
     cor_mtx = np.zeros((4, 4), dtype='float32')
     cor_mtx[0:3, 0:3] = r_mat
-    cor_mtx[3, 0:3] = t
+    cor_mtx[0:3, 3] = t
     cor_mtx[3, 3] = 1
     print cor_mtx
     inv_cormtx = np.linalg.inv(cor_mtx)
@@ -155,12 +167,13 @@ if __name__ == '__main__':
     # print wa, la
     V_row_camera = []
     for i in range(V_row1.size/3):
-        tmp_v = np.array([V_row1[i][0], V_row1[i][1], V_row1[i][2], 1]).dot(inv_cormtx)
+        # tmp_v = np.array([V_row1[i][0], V_row1[i][1], V_row1[i][2], 1]).dot(inv_cormtx)
+        tmp_v = inv_cormtx.dot(np.array([V_row1[i][0], V_row1[i][1], V_row1[i][2], 1]).T)
         V_row_camera.append([tmp_v[0], tmp_v[1], tmp_v[2]])
     V_row_camera = np.vstack(V_row_camera)
     # print V_row_camera.size
 
-    # Mesh.save_to_obj('result/V_row1.obj', V_row1, row_mesh.f)
+    # Mesh.save_to_obj('result/V_row_camera.obj', V_row_camera, row_mesh.f)
 
     #Ray tracing to find back-projection 3D vertices
     mesh_camera = trimesh.Trimesh(vertices=V_row_camera, faces=row_mesh.f)
@@ -173,15 +186,19 @@ if __name__ == '__main__':
 
     # ray_pts = []
     # for k in range(10):
-    #     cur_pts = deepcopy(origins[k*100])
+    #     cur_pts = deepcopy(origins[k*50])
     #     for i in range (10):
     #         tmp = deepcopy(cur_pts)
     #         ray_pts.append(tmp)
-    #         cur_pts += 0.2*dirs[k*100]
-            # print dirs[k*3], cur_pts
-    # ray_pts = np.vstack(ray_pts)
-    # print ray_pts.shape[0]
-    # print ray_pts
+    #         cur_pts += 0.2*dirs[k*50]
+    # for i in range(10):
+    #     ray_pts.append(np.array([0, 0, 1]) * 0.2 * i)
+    #     ray_pts.append(np.array([0, 1, 0]) * 0.2 * i)
+    #     ray_pts.append(np.array([1, 0, 0]) * 0.2 * i)
+    #         # print dirs[k*3], cur_pts
+    # # ray_pts = np.vstack(ray_pts)
+    # # print ray_pts.shape[0]
+    # # print ray_pts
     # Mesh.save_to_obj('result/ray_pts.obj', ray_pts, None)
 
     # print intersection_pts, index_ray, index_tri
