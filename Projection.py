@@ -86,8 +86,16 @@ if __name__ == '__main__':
     # rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([1.2, 0.2, 0]), f=ch.array([w, w]) / 2.,
     #                           c=ch.array([w, h]) / 2.,
     #                           k=ch.zeros(5))
-    rt = ch.array([0, 0, 0]) * np.pi / 2
-    rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([-0.05, 0.2, -0.25]), f=ch.array([w, w]) / 2.,
+    # rt = ch.array([0, 0, 0]) * np.pi / 2
+    # rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([-0.05, 0.2, -0.25]), f=ch.array([w, w]) / 2.,
+    #                            c=ch.array([w, h]) / 2.,
+    #                            k=ch.zeros(5))
+    # rt = ch.array([0.1, 0.4, 0]) * np.pi / 2
+    # rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([-1.4, 0.3, 0.2]), f=ch.array([w, w]) / 2.,
+    #                            c=ch.array([w, h]) / 2.,
+    #                            k=ch.zeros(5))
+    rt = ch.array([-0.9, 0, 0]) * np.pi / 3
+    rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([0, -1.5, 0.2]), f=ch.array([w, w]) / 2.,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     # 13282
@@ -117,6 +125,7 @@ if __name__ == '__main__':
 
     cc = 0
     index = 0
+    frame = []
     for i in range(640):
         for j in range(480):
             if contour1[j, i, 0] > 0 & (cc % 3 == 0):
@@ -124,11 +133,20 @@ if __name__ == '__main__':
                 contour1[j, i] = [1, 0, 0]
                 index += 1
             cc += 1
+            # if (i == 0) | (j == 0) | (i == 639) | (j == 479):
+            #     frame.append([j, i])
     print index, cc
 
-    plt.imshow(contour1)
-    plt.show()
-    scipy.misc.imsave('result/contour1.jpg', contour1)
+    # reversed_frame = []
+    # for i in range(2236):
+    #     tmp = [float(frame[i][1] - 320) / 320, float(frame[i][0] - 240) / 320, 1]
+    #     reversed_frame.append(tmp)
+    #
+    # Mesh.save_to_obj('result/frame.obj', reversed_frame, None)
+
+    # plt.imshow(contour1)
+    # plt.show()
+    # scipy.misc.imsave('result/contour3.jpg', contour1)
 
     # fig = plt.figure()
     # ax = fig.add_subplot(111, projection='3d')
@@ -147,13 +165,19 @@ if __name__ == '__main__':
     #Calculate Vertices coordinates in Camera coordinate system
     V_row1 = deepcopy(V_row.r)
     # rt = np.array([0, -0.3, 0]) * np.pi / 2
-    rt = ch.array([0, 0, 0])
+    # rt = np.array([0, 0, 0])
+    # rt = np.array([0.1, 0.4, 0]) * np.pi / 2
+    rt = np.array([-0.9, 0, 0]) * np.pi / 3
     tmpr = R.from_rotvec(rt)
-    W_to_Cr = R.from_rotvec(np.array([0, np.pi/2, 0]))
-    # r_mat = tmpr.as_dcm().dot(W_to_Cr.as_dcm())
+    # W_to_Cr = np.array([[-1, 0, 0],
+    #                     [0, -1, 0],
+    #                     [0, 0, -1]])
+    # r_mat = tmpr.as_dcm().dot(W_to_Cr)
     r_mat = tmpr.as_dcm()
-    # t = np.array([1.2, 0.2, 0]).T
-    t = np.array([-0.05, 0.2, -0.25]).T
+    # t = np.array([1.2, 0.2, 0])
+    # t = np.array([-0.05, 0.2, -0.25]).T
+    # t = np.array([-1.4, 0.3, 0.2])
+    t = np.array([0, -1.5, 0.2]).T
     cor_mtx = np.zeros((4, 4), dtype='float32')
     cor_mtx[0:3, 0:3] = r_mat
     cor_mtx[0:3, 3] = t
@@ -168,12 +192,13 @@ if __name__ == '__main__':
     V_row_camera = []
     for i in range(V_row1.size/3):
         # tmp_v = np.array([V_row1[i][0], V_row1[i][1], V_row1[i][2], 1]).dot(inv_cormtx)
-        tmp_v = inv_cormtx.dot(np.array([V_row1[i][0], V_row1[i][1], V_row1[i][2], 1]).T)
+        # tmp_v = np.matmul(np.array([V_row1[i][0], V_row1[i][1], V_row1[i][2], 1]), cor_mtx)
+        tmp_v = cor_mtx.dot(np.array([V_row1[i][0], V_row1[i][1], V_row1[i][2], 1]).T)
         V_row_camera.append([tmp_v[0], tmp_v[1], tmp_v[2]])
     V_row_camera = np.vstack(V_row_camera)
     # print V_row_camera.size
 
-    # Mesh.save_to_obj('result/V_row_camera.obj', V_row_camera, row_mesh.f)
+    # Mesh.save_to_obj('result/V_row_camera3_R.obj', V_row_camera, row_mesh.f)
 
     #Ray tracing to find back-projection 3D vertices
     mesh_camera = trimesh.Trimesh(vertices=V_row_camera, faces=row_mesh.f)
@@ -186,20 +211,20 @@ if __name__ == '__main__':
 
     # ray_pts = []
     # for k in range(10):
-    #     cur_pts = deepcopy(origins[k*50])
-    #     for i in range (10):
+    #     cur_pts = deepcopy(origins[k*160])
+    #     for i in range(10):
     #         tmp = deepcopy(cur_pts)
     #         ray_pts.append(tmp)
-    #         cur_pts += 0.2*dirs[k*50]
+    #         cur_pts += 0.2*dirs[k*160]
     # for i in range(10):
     #     ray_pts.append(np.array([0, 0, 1]) * 0.2 * i)
     #     ray_pts.append(np.array([0, 1, 0]) * 0.2 * i)
     #     ray_pts.append(np.array([1, 0, 0]) * 0.2 * i)
-    #         # print dirs[k*3], cur_pts
+    #
     # # ray_pts = np.vstack(ray_pts)
     # # print ray_pts.shape[0]
     # # print ray_pts
-    # Mesh.save_to_obj('result/ray_pts.obj', ray_pts, None)
+    # Mesh.save_to_obj('result/ray_pts3.obj', ray_pts, None)
 
     # print intersection_pts, index_ray, index_tri
     print origins.shape[0], dirs.shape[0], intersection_pts.shape[0], index_ray.size, index_tri.size

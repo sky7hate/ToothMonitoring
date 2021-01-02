@@ -264,15 +264,15 @@ def save_to_obj(filename, verts, faces):
             for vert in verts:
                 f.write('v %f %f %f\n' % tuple(vert))
 
-            # write faces
-            f.write('# %d faces\n' % len(faces))
-            for face in faces:
-                f.write('f %d %d %d\n' % tuple(face + 1))
-            # if (faces != None):
-            #     # write faces
-            #     f.write('# %d faces\n' % len(faces))
-            #     for face in faces:
-            #         f.write('f %d %d %d\n' % tuple(face+1))
+            # # write faces
+            # f.write('# %d faces\n' % len(faces))
+            # for face in faces:
+            #     f.write('f %d %d %d\n' % tuple(face + 1))
+            if (faces != None):
+                # write faces
+                f.write('# %d faces\n' % len(faces))
+                for face in faces:
+                    f.write('f %d %d %d\n' % tuple(face+1))
 
 
 
