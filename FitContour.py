@@ -1,4 +1,5 @@
 import Mesh
+import Projection as pj
 import procrustes as p
 import numpy as np
 from copy import deepcopy
@@ -14,10 +15,177 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import scipy.misc
 import scipy.optimize as op
+import lmfit
+from lmfit import Parameters
 import time
+from scipy.spatial.transform import Rotation as R
 import cv2
 from config import cfg
 import os
+
+def get_sample_pts(contour):
+    #Sample points
+    t_sample_pts = []
+    # print contour1.size
+
+    cc = 0
+    index = 0
+    for i in range(640):
+        for j in range(480):
+            if contour[j, i, 0] > 0 & (cc % 3 == 0):
+                t_sample_pts.append([j, i])
+                index += 1
+            cc += 1
+            # if (i == 0) | (j == 0) | (i == 639) | (j == 479):
+            #     frame.append([j, i])
+    # print index, cc
+    return t_sample_pts
+
+def get_pair_pts(gt_contour, sp_pts, pair_id):
+    gt_pts = []
+    index = 0
+    for i in range(640):
+        for j in range(480):
+            if gt_contour[j, i, 0] > 0:
+                gt_pts.append([j, i])
+                index += 1
+
+    pair_pts = []
+    for i in range(pair_id.shape[0]):
+        tmp_dis = 1000000
+        min_index = 0
+        for j in range(index):
+            cur_dis = (sp_pts[pair_id[i]][0]-gt_pts[j][0])*(sp_pts[pair_id[i]][0]-gt_pts[j][0]) \
+                      + (sp_pts[pair_id[i]][1]-gt_pts[j][1])*(sp_pts[pair_id[i]][1]-gt_pts[j][1])
+            if cur_dis < tmp_dis:
+                tmp_dis = cur_dis
+                min_index = j
+        pair_pts.append(gt_pts[min_index])
+    return pair_pts
+
+def residual_t(pars, verts, Crt, Ct, pair_pts):
+    tp = np.array([pars['tx'], pars['ty'], pars['tz']])
+    t_verts = verts + tp
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    t_vec = Ct.T
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = r_mat
+    cor_mtx[0:3, 3] = t_vec
+    cor_mtx[3, 3] = 1
+
+    residuals = []
+    for i in range(t_verts.size / 3):
+        tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+        pix_u = 320*(tmp_v[0]/tmp_v[2]) + 320
+        pix_v = 320*(tmp_v[1]/tmp_v[2]) + 240
+        residuals.append(pix_v-pair_pts[i][0])
+        residuals.append(pix_u-pair_pts[i][1])
+    residuals = np.vstack(residuals)
+
+    return residuals
+
+def residual_rtt(pars, verts, Crt, Ct, pair_pts):
+    tp = np.array([pars['tx'], pars['ty'], pars['tz']])
+    rtp = np.array([pars['rtx'], pars['rty'], pars['rtz']])
+    t_verts = verts.dot(Rodrigues(rtp)) + tp
+    Crt = np.array(Crt.r)
+    Ct = np.array(Ct.r)
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    t_vec = Ct.T
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = r_mat
+    cor_mtx[0:3, 3] = t_vec
+    cor_mtx[3, 3] = 1
+
+    residuals = []
+    for i in range(t_verts.size / 3):
+        tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+        pix_u = 320*(tmp_v[0]/tmp_v[2]) + 320
+        pix_v = 320*(tmp_v[1]/tmp_v[2]) + 240
+        residuals.append(pix_v-pair_pts[i][0])
+        residuals.append(pix_u-pair_pts[i][1])
+    residuals = np.vstack(residuals)
+
+    return residuals
+
+def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1, Crt2, Ct2, Crt3, Ct3, Crt4, Ct4, pair_pts1, pair_pts2, pair_pts3, pair_pts4):
+    tp = np.array([pars['tx'], pars['ty'], pars['tz']])
+    rtp = np.array([pars['rtx'], pars['rty'], pars['rtz']])
+    residuals = []
+    t_verts = (verts1-offset).dot(Rodrigues(rtp)) + offset + tp
+    Crt = np.array(Crt1.r)
+    Ct = np.array(Ct1.r)
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    t_vec = Ct.T
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = r_mat
+    cor_mtx[0:3, 3] = t_vec
+    cor_mtx[3, 3] = 1
+    for i in range(t_verts.size / 3):
+        tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+        pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+        pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+        residuals.append(pix_v - pair_pts1[i][0])
+        residuals.append(pix_u - pair_pts1[i][1])
+
+    t_verts = (verts2-offset).dot(Rodrigues(rtp)) + offset + tp
+    Crt = np.array(Crt2.r)
+    Ct = np.array(Ct2.r)
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    t_vec = Ct.T
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = r_mat
+    cor_mtx[0:3, 3] = t_vec
+    cor_mtx[3, 3] = 1
+    for i in range(t_verts.size / 3):
+        tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+        pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+        pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+        residuals.append(pix_v - pair_pts2[i][0])
+        residuals.append(pix_u - pair_pts2[i][1])
+
+    t_verts = (verts3-offset).dot(Rodrigues(rtp)) + offset + tp
+    Crt = np.array(Crt3.r)
+    Ct = np.array(Ct3.r)
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    t_vec = Ct.T
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = r_mat
+    cor_mtx[0:3, 3] = t_vec
+    cor_mtx[3, 3] = 1
+    for i in range(t_verts.size / 3):
+        tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+        pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+        pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+        residuals.append(pix_v - pair_pts3[i][0])
+        residuals.append(pix_u - pair_pts3[i][1])
+
+    t_verts = (verts4-offset).dot(Rodrigues(rtp)) + offset + tp
+    Crt = np.array(Crt4.r)
+    Ct = np.array(Ct4.r)
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    t_vec = Ct.T
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = r_mat
+    cor_mtx[0:3, 3] = t_vec
+    cor_mtx[3, 3] = 1
+    for i in range(t_verts.size / 3):
+        tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+        pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+        pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+        residuals.append(pix_v - pair_pts4[i][0])
+        residuals.append(pix_u - pair_pts4[i][1])
+
+    residuals = np.vstack(residuals)
+
+    return residuals
+
 
 if __name__ == '__main__':
 
@@ -42,7 +210,7 @@ if __name__ == '__main__':
     numTooth = len(teeth_row_mesh.mesh_list)
     Vi_list = [ch.array(teeth_row_mesh.mesh_list[i].v) for i in range(numTooth)]
     Vi_offset = [ch.mean(Vi_list[i], axis=0) for i in range(numTooth)]
-    print(Vi_offset)
+    # print(Vi_offset)
 
     Vi_center = [(Vi_list[i] - Vi_offset[i]) for i in range(numTooth)]
 
@@ -52,13 +220,13 @@ if __name__ == '__main__':
     # t_row = ch.zeros(3)
     # R_row = ch.array([0, 0, 0.06])
     # t_row = ch.array([0, 0.06, 0])
-    R_row = ch.array([0, 0, 0.01])
-    t_row = ch.array([0, 0.01, 0])
+    R_row = ch.array([0, 0, 0.06])
+    t_row = ch.array([0, 0.06, 0])
     V_row = t_row + ch.vstack([ti_list[i] + Vi_offset[i] + Vi_center[i].dot(Rodrigues(Ri_list[i])) for i in range(numTooth)]).dot(Rodrigues(R_row))
     # V_comb = ch.vstack([ti_list[i] + Vi_list[i].mean(axis=0) + (Vi_list[i] - Vi_list[i].mean(axis=0)).dot(Rodrigues(Ri_list[i])) for i in range(numTooth)])
     # V_row = t_row + V_comb.mean(axis=0) + (V_comb - V_comb.mean(axis=0)).dot(Rodrigues(R_row))
 
-    # Mesh.save_to_obj('result/from GuMin/fit_row.obj', V_row.r, row_mesh.f)
+    # Mesh.save_to_obj('result/V_row_initial.obj', V_row.r, row_mesh.f)
 
     w, h = (640, 480)
 
@@ -77,8 +245,9 @@ if __name__ == '__main__':
     #                                c=ch.array([w, h]) / 2.,
     #                                k=ch.zeros(5))
     #12681
-    rt = ch.array([0, -0.3, 0]) * np.pi/2
-    rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([1.2, 0.2, 0]), f=ch.array([w, w]) / 2.,
+    rt1 = ch.array([0, -0.3, 0]) * np.pi/2
+    t1 = ch.array([1.2, 0.2, 0])
+    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
     #13282
@@ -108,8 +277,9 @@ if __name__ == '__main__':
     #                                c=ch.array([w, h]) / 2.,
     #                                k=ch.zeros(5))
     #12681
-    rt = ch.array([0.08, 0, 0]) * np.pi / 2
-    rn2.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([-0.05, 0.2, -0.25]), f=ch.array([w, w]) / 2.,
+    rt2 = ch.array([0.08, 0, 0]) * np.pi / 2
+    t2 = ch.array([-0.05, 0.2, -0.25])
+    rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
     #13282
@@ -140,8 +310,9 @@ if __name__ == '__main__':
     #                           c=ch.array([w, h]) / 2.,
     #                           k=ch.zeros(5))
     #12681
-    rt = ch.array([-0.9, 0, 0]) * np.pi / 3
-    rn3.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([0, -1.5, 0.2]), f=ch.array([w, w]) / 2.,
+    rt3 = ch.array([-0.9, 0, 0]) * np.pi / 3
+    t3 = ch.array([0, -1.5, 0.2])
+    rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
     #13282
@@ -173,8 +344,9 @@ if __name__ == '__main__':
     #                                c=ch.array([w, h]) / 2.,
     #                                k=ch.zeros(5))
     #12681
-    rt = ch.array([0.1, 0.4, 0]) * np.pi/2
-    rn4.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([-1.4, 0.3, 0.2]), f=ch.array([w, w]) / 2.,
+    rt4 = ch.array([0.1, 0.4, 0]) * np.pi/2
+    t4 = ch.array([-1.4, 0.3, 0.2])
+    rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
     #13282
@@ -207,38 +379,90 @@ if __name__ == '__main__':
     # rn5.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
     # rn5.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
 
-    # create the Energy
+
     observed1 = load_image(img1_file_path)
     observed2 = load_image(img2_file_path)
     observed3 = load_image(img3_file_path)
     observed4 = load_image(img4_file_path)
-    def residual(obs1, obs2, obs3, obs4, r1, r2, r3, r4):
-        objs = {}
-        n_level = 6
-        normalizations = ['size', 'SSE', None]
-        nth = 0
-        E_raw1 = r1 - obs1
-        E_pyr1 = gaussian_pyramid(E_raw1, n_levels=n_level, normalization=normalizations[nth]) #, normalization='size'
 
-    # scipy.misc.imsave('result/raw_energy_view1.jpg'.format(iter), E_raw1)
-    # print (E_raw1)
+    #individual tooth pose estimation
+    #for i in range(numTooth):
+    err = 100000
+    err_dif = 100
+    iter = 0
+    while not(err < 10 or iter > 20):
+        mean = np.mean(V_row.r, axis=0)
 
-        E_raw2 = r2 - obs2
-        E_pyr2 = gaussian_pyramid(E_raw2, n_levels=n_level, normalization=normalizations[nth])  # , normalization='size'
+        sample_pts1 = get_sample_pts(rn.r) #first time using intial rn
+        #get back projection 3D verts and id of 2D points which can find corresponding verts
+        intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
+        pair_pts1 = get_pair_pts(observed1, sample_pts1, index_ray1) #find pair points (only those getting 3D verts)
 
+        sample_pts2 = get_sample_pts(rn2.r)
+        intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
+        pair_pts2 = get_pair_pts(observed2, sample_pts2, index_ray2)
 
-    # scipy.misc.imsave('result/raw_energy_view2.jpg'.format(iter), E_raw2)
-    # print (E_raw2)
+        sample_pts3 = get_sample_pts(rn3.r)
+        intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
+        pair_pts3 = get_pair_pts(observed3, sample_pts3, index_ray3)
 
-        E_raw3 = r3 - obs3
-        E_pyr3 = gaussian_pyramid(E_raw3, n_levels=n_level, normalization=normalizations[nth])  # , normalization='size'
+        sample_pts4 = get_sample_pts(rn4.r)
+        intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
+        pair_pts4 = get_pair_pts(observed4, sample_pts4, index_ray4)
 
+        # pars = np.array([0, 0, 0, 0, 0, 0], dtype='float32')
+        pars = Parameters()
+        pars.add('rtx', value=0)
+        pars.add('rty', value=0)
+        pars.add('rtz', value=0)
+        pars.add('tx', value=0)
+        pars.add('ty', value=0)
+        pars.add('tz', value=0)
+        out = lmfit.minimize(residual_rtt_allview, pars,
+                             args=(mean, intersection_pts1, intersection_pts2, intersection_pts3, intersection_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
+                             method='leastsq')
+        err_dif = err - out.chisqr
+        err = out.chisqr
+        # out.params.pretty_print()
+        print out.message, err
 
-        E_raw4 = r4 - obs4
-        E_pyr4 = gaussian_pyramid(E_raw4, n_levels=n_level, normalization=normalizations[nth])  # , normalization='size'
+        # rn_c = deepcopy(rn.r)
+        # rn_c[rn_c[:, :, 0] > 0] *= [1, 0, 0]
+        # ob1_dc = deepcopy(observed1)
+        # ob1_dc[ob1_dc[:, :, 0] > 0] *= [0, 1, 0]
+        # plt.imshow(rn_c + ob1_dc)
+        # plt.show()
+        # Mesh.save_to_obj('result/V_row0.obj', V_row, row_mesh.f)
 
-        return E_pyr1+E_pyr2+E_pyr3+E_pyr4
+        tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
+        tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
+        print tmprt, tmpt
+        V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
 
+        #reproject 2D contour
+        rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                  c=ch.array([w, h]) / 2.,
+                                  k=ch.zeros(5))
+        rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+
+        # Mesh.save_to_obj('result/V_row_op.obj', V_row, row_mesh.f)
+        # rn_c2 = deepcopy(rn.r)
+        # rn_c2[rn_c2[:, :, 0] > 0] *= [0, 1, 0]
+        #
+        # plt.imshow(rn_c2 + rn_c)
+        # plt.show()
+        # break
+        iter += 1
+
+    Mesh.save_to_obj('result/V_row_opm.obj', V_row, row_mesh.f)
 
 
     # observed5 = load_image(img5_file_path)
@@ -270,8 +494,7 @@ if __name__ == '__main__':
     start_time = time.time()
 
     def cb(_):
-        global E_raw1, E_raw2, E_raw3, E_raw4, ob1_dc, ob2_dc, ob3_dc, ob4_dc, fig, axarr, iter, start_time
-
+        global ob1_dc, ob2_dc, ob3_dc, ob4_dc, fig, axarr, iter, start_time
 
         print("--- %s seconds ---" % (time.time() - start_time))
 
@@ -321,98 +544,98 @@ if __name__ == '__main__':
 
         plt.pause(5)
 
-    stages = 1
-    methods = ['dogleg', 'SLSQP', 'Newton-CG', 'BFGS']
-    method = 1 #'trust-ncg' #'newton-cg' #''BFGS' #'dogleg'
-    # option = {'maxiter': 1000, 'disp': 1, 'e_3': 1.0e-4}
-    option = {'disp': True}
-    # option = None
-    tol = 1e-15
-    ch.random.seed(19921122)
-    random_move = lambda x, order: (1.0 - 1.0 / np.e**order + 2*np.random.rand(3) / np.e**order)*x
-    start_time = time.time()
-    # todo: only a few teeth moved, so adding a sparse constraint to Ri_list and ti_list should make a better result.
-    print ('OPTIMIZING TRANSLATION, ROTATION: method=[{}]'.format(methods[method]))
-    for stage in range(stages):
-        print('## Stage {} ##'.format(stage))
-        # randomly jump around the solution to help get rid of local minimum,=
-        #  as the stage increase, the movement should be smaller
-        if stage != 0:
-            #R_row[:] = random_move(R_row.r, stage)
-            #t_row[:] = random_move(t_row.r, stage)
-            for i in range(numTooth):
-                Ri_list[i][:] = random_move(Ri_list[i].r, stage+4)
-                ti_list[i][:] = random_move(ti_list[i].r, stage+4)
-        # ch.minimize({'pyr1': E_pyr1}, x0=[t_row], callback=cb, method=method, options=option, tol=tol)
-        # ch.minimize({'pyr2': E_pyr1}, x0=[R_row, t_row], callback=cb, method=method, options=option, tol=tol)
-        # ch.minimize({'pyr3': E_pyr1}, x0=ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
-        # ch.minimize({'pyr4': E_pyr1}, x0=Ri_list + ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
-
-        if stage == 0:
-            print('Sub-stage {}-1: x0=[t_row]'.format(stage))
-            op.minimize(residual, x0=[t_row], callback=cb, method=methods[method], options=option, tol=tol)
-
-            print('Sub-stage {}-2: x0=[R_row, t_row]'.format(stage))
-            op.minimize(residual, x0=[R_row, t_row], callback=cb, method=methods[method], options=option, tol=tol)
-
-        # print('Sub-stage {}-3: x0=[R_row, t_row] + ti_list'.format(stage))
-        # ch.minimize(objs, x0=[R_row, t_row] + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
-
-        for k in range(3):
-            for i in range(2):
-                print('Sub-stage {}-3, round {}: x0=ti_list'.format(stage, i))
-                for j in range(numTooth):
-                    ch.minimize(residual, x0=[ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)
-
-            for i in range(3):
-                print('Sub-stage {}-4, round {}: x0=Ri_list'.format(stage, i))
-                for j in range(numTooth):
-                    ch.minimize(residual, x0=[Ri_list[j]], callback=cb, method=methods[method], options=option, tol=tol)  # Ri_list +
-
-        for i in range(2):
-            print('Sub-stage {}-5, round {}: x0=Ri_list+ti_list'.format(stage, i))
-            for j in range(numTooth):
-                ch.minimize(residual, x0=[Ri_list[j], ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)   #Ri_list + ti_list
-
-        # print('Sub-stage {}-6: x0=[R_row, t_row] + Ri_list + ti_list'.format(stage))
-        # ch.minimize(objs, x0=[R_row, t_row] + Ri_list + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
-
-        Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), V_row.r, row_mesh.f)
-        t_c = len(teeth_row_mesh.mesh_list[0].v)
-        vert_t = [[] for i in range(numTooth)]
-        mvert_t = [[] for i in range(numTooth)]
-        idx = 0
-        for i in range(V_row.shape[0]):
-            if i < t_c:
-                vert_t[idx].append(V_row[i].r)
-            else:
-                idx += 1
-                vert_t[idx].append(V_row[i].r)
-                t_c += len(teeth_row_mesh.mesh_list[idx].v)
-            mvert_t[idx].append(moved_mesh.row_mesh.v[i])
-
-        for i in range(numTooth):
-            #Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), vert_t[i], teeth_row_mesh.mesh_list[i].f)
-            #print(i)
-            d, Z, tform = p.procrustes(np.array(mvert_t[i]), np.array(vert_t[i]), scaling=False)
-            # new_mvert_t = mvert_t / 2.0
-            # new_mvert_t *= moved_mesh.max_v
-            # new_vert_t = vert_t / 2.0
-            # new_vert_t *= teeth_row_mesh.max_v
-            # d1, Z1, tform1 = p.procrustes(np.array(new_mvert_t[i]), np.array(new_vert_t[i]), scaling=False)
-            #print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']), 'scale_reverse:', tform1['translation'], p.rotationMatrixToEulerAngles(tform1['rotation']))
-            print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']))
-        scipy.misc.imsave('result/fittingresult1_stage{}.jpg'.format(stage), rn.r)
-        scipy.misc.imsave('result/fittingresult2_stage{}.jpg'.format(stage), rn2.r)
-        scipy.misc.imsave('result/fittingresult3_stage{}.jpg'.format(stage), rn3.r)
-        scipy.misc.imsave('result/fittingresult4_stage{}.jpg'.format(stage), rn4.r)
-        # scipy.misc.imsave('result/fittingresult5_stage{}.jpg'.format(stage), rn5.r)
-        # scipy.misc.imsave('result/fittingresult_diff1_stage{}.jpg'.format(stage), np.abs(E_raw1.r))
-        # scipy.misc.imsave('result/fittingresult_diff2_stage{}.jpg'.format(stage), np.abs(E_raw2.r))
-        # scipy.misc.imsave('result/fittingresult_diff3_stage{}.jpg'.format(stage), np.abs(E_raw3.r))
-        # scipy.misc.imsave('result/fittingresult_diff4_stage{}.jpg'.format(stage), np.abs(E_raw4.r))
-        # scipy.misc.imsave('result/fittingresult_diff5_stage{}.jpg'.format(stage), np.abs(E_raw5.r))
-
-
-    print("---Optimization takes %s seconds ---" % (time.time()-start_time))
-    #vw.release()
+    # stages = 1
+    # methods = ['dogleg', 'SLSQP', 'Newton-CG', 'BFGS']
+    # method = 1 #'trust-ncg' #'newton-cg' #''BFGS' #'dogleg'
+    # # option = {'maxiter': 1000, 'disp': 1, 'e_3': 1.0e-4}
+    # option = {'disp': True}
+    # # option = None
+    # tol = 1e-15
+    # ch.random.seed(19921122)
+    # random_move = lambda x, order: (1.0 - 1.0 / np.e**order + 2*np.random.rand(3) / np.e**order)*x
+    # start_time = time.time()
+    # # todo: only a few teeth moved, so adding a sparse constraint to Ri_list and ti_list should make a better result.
+    # print ('OPTIMIZING TRANSLATION, ROTATION: method=[{}]'.format(methods[method]))
+    # for stage in range(stages):
+    #     print('## Stage {} ##'.format(stage))
+    #     # randomly jump around the solution to help get rid of local minimum,=
+    #     #  as the stage increase, the movement should be smaller
+    #     if stage != 0:
+    #         #R_row[:] = random_move(R_row.r, stage)
+    #         #t_row[:] = random_move(t_row.r, stage)
+    #         for i in range(numTooth):
+    #             Ri_list[i][:] = random_move(Ri_list[i].r, stage+4)
+    #             ti_list[i][:] = random_move(ti_list[i].r, stage+4)
+    #     # ch.minimize({'pyr1': E_pyr1}, x0=[t_row], callback=cb, method=method, options=option, tol=tol)
+    #     # ch.minimize({'pyr2': E_pyr1}, x0=[R_row, t_row], callback=cb, method=method, options=option, tol=tol)
+    #     # ch.minimize({'pyr3': E_pyr1}, x0=ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
+    #     # ch.minimize({'pyr4': E_pyr1}, x0=Ri_list + ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
+    #
+    #     if stage == 0:
+    #         print('Sub-stage {}-1: x0=[t_row]'.format(stage))
+    #         op.minimize(residual, x0=[t_row], callback=cb, method=methods[method], options=option, tol=tol)
+    #
+    #         print('Sub-stage {}-2: x0=[R_row, t_row]'.format(stage))
+    #         op.minimize(residual, x0=[R_row, t_row], callback=cb, method=methods[method], options=option, tol=tol)
+    #
+    #     # print('Sub-stage {}-3: x0=[R_row, t_row] + ti_list'.format(stage))
+    #     # ch.minimize(objs, x0=[R_row, t_row] + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
+    #
+    #     for k in range(3):
+    #         for i in range(2):
+    #             print('Sub-stage {}-3, round {}: x0=ti_list'.format(stage, i))
+    #             for j in range(numTooth):
+    #                 ch.minimize(residual, x0=[ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)
+    #
+    #         for i in range(3):
+    #             print('Sub-stage {}-4, round {}: x0=Ri_list'.format(stage, i))
+    #             for j in range(numTooth):
+    #                 ch.minimize(residual, x0=[Ri_list[j]], callback=cb, method=methods[method], options=option, tol=tol)  # Ri_list +
+    #
+    #     for i in range(2):
+    #         print('Sub-stage {}-5, round {}: x0=Ri_list+ti_list'.format(stage, i))
+    #         for j in range(numTooth):
+    #             ch.minimize(residual, x0=[Ri_list[j], ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)   #Ri_list + ti_list
+    #
+    #     # print('Sub-stage {}-6: x0=[R_row, t_row] + Ri_list + ti_list'.format(stage))
+    #     # ch.minimize(objs, x0=[R_row, t_row] + Ri_list + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
+    #
+    #     Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), V_row.r, row_mesh.f)
+    #     t_c = len(teeth_row_mesh.mesh_list[0].v)
+    #     vert_t = [[] for i in range(numTooth)]
+    #     mvert_t = [[] for i in range(numTooth)]
+    #     idx = 0
+    #     for i in range(V_row.shape[0]):
+    #         if i < t_c:
+    #             vert_t[idx].append(V_row[i].r)
+    #         else:
+    #             idx += 1
+    #             vert_t[idx].append(V_row[i].r)
+    #             t_c += len(teeth_row_mesh.mesh_list[idx].v)
+    #         mvert_t[idx].append(moved_mesh.row_mesh.v[i])
+    #
+    #     for i in range(numTooth):
+    #         #Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), vert_t[i], teeth_row_mesh.mesh_list[i].f)
+    #         #print(i)
+    #         d, Z, tform = p.procrustes(np.array(mvert_t[i]), np.array(vert_t[i]), scaling=False)
+    #         # new_mvert_t = mvert_t / 2.0
+    #         # new_mvert_t *= moved_mesh.max_v
+    #         # new_vert_t = vert_t / 2.0
+    #         # new_vert_t *= teeth_row_mesh.max_v
+    #         # d1, Z1, tform1 = p.procrustes(np.array(new_mvert_t[i]), np.array(new_vert_t[i]), scaling=False)
+    #         #print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']), 'scale_reverse:', tform1['translation'], p.rotationMatrixToEulerAngles(tform1['rotation']))
+    #         print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']))
+    #     scipy.misc.imsave('result/fittingresult1_stage{}.jpg'.format(stage), rn.r)
+    #     scipy.misc.imsave('result/fittingresult2_stage{}.jpg'.format(stage), rn2.r)
+    #     scipy.misc.imsave('result/fittingresult3_stage{}.jpg'.format(stage), rn3.r)
+    #     scipy.misc.imsave('result/fittingresult4_stage{}.jpg'.format(stage), rn4.r)
+    #     # scipy.misc.imsave('result/fittingresult5_stage{}.jpg'.format(stage), rn5.r)
+    #     # scipy.misc.imsave('result/fittingresult_diff1_stage{}.jpg'.format(stage), np.abs(E_raw1.r))
+    #     # scipy.misc.imsave('result/fittingresult_diff2_stage{}.jpg'.format(stage), np.abs(E_raw2.r))
+    #     # scipy.misc.imsave('result/fittingresult_diff3_stage{}.jpg'.format(stage), np.abs(E_raw3.r))
+    #     # scipy.misc.imsave('result/fittingresult_diff4_stage{}.jpg'.format(stage), np.abs(E_raw4.r))
+    #     # scipy.misc.imsave('result/fittingresult_diff5_stage{}.jpg'.format(stage), np.abs(E_raw5.r))
+    #
+    #
+    # print("---Optimization takes %s seconds ---" % (time.time()-start_time))
+    # #vw.release()
