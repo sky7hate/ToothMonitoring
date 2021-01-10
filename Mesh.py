@@ -51,15 +51,20 @@ class TeethRowMesh(object):
             self.mesh_list = [self.load(f) for f in self.file_name_list]
             self.row_mesh = self.get_teethrow_mesh()
             self.start_idx_list = []
+            self.faces_num = []
             self.max_v = np.max(self.row_mesh.v)
         # can be calculated as the center of each tooth
         #self.positions_in_row = self.read_tooth_origin(glob.glob(folder+'/*.txt')[0])
 
             numVerts = 0
+            numFaces = 0
             for i, m in enumerate(self.mesh_list):
                 self.start_idx_list.append(numVerts)
                 numVerts += m.v.shape[0]
+                self.faces_num.append(numFaces)
+                numFaces += m.f.shape[0]
             self.start_idx_list.append(numVerts)
+            self.faces_num.append(numFaces)
 
             self.view_init()
 

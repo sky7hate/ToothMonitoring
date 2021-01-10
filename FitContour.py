@@ -51,6 +51,7 @@ def get_pair_pts(gt_contour, sp_pts, pair_id):
                 index += 1
 
     pair_pts = []
+    # print pair_id.shape[0]
     for i in range(pair_id.shape[0]):
         tmp_dis = 1000000
         min_index = 0
@@ -385,82 +386,121 @@ if __name__ == '__main__':
     observed3 = load_image(img3_file_path)
     observed4 = load_image(img4_file_path)
 
+    start_time = time.time()
     #individual tooth pose estimation
-    #for i in range(numTooth):
-    err = 100000
-    err_dif = 100
-    iter = 0
-    while not(err < 10 or iter > 20):
-        mean = np.mean(V_row.r, axis=0)
+    for i in range(numTooth):
+        err = 100000
+        err_dif = 100
+        iter = 0
+        # print V_row.shape
+        cur_tooth = V_row[teeth_row_mesh.start_idx_list[i]:teeth_row_mesh.start_idx_list[i+1], 0:3]
+        # print cur_tooth.shape
+        while not(err < 10 or err_dif < 1 or iter > 20):
+            mean = np.mean(cur_tooth.r, axis=0)
+            # print mean
+            sample_pts1 = get_sample_pts(rn.r) #first time using intial rn
+            #get back projection 3D verts and id of 2D points which can find corresponding verts
+            intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
+            sp_ins_pts1 = []
+            sp_index_ray1 = []
+            for j in range(index_tri1.size):
+                if teeth_row_mesh.faces_num[i] <= index_tri1[j] and index_tri1[j] < teeth_row_mesh.faces_num[i+1]:
+                    sp_ins_pts1.append(intersection_pts1[j])
+                    sp_index_ray1.append(index_ray1[j])
+            sp_ins_pts1 = np.vstack(sp_ins_pts1)
+            sp_index_ray1 = np.squeeze(sp_index_ray1)
+            pair_pts1 = get_pair_pts(observed1, sample_pts1, sp_index_ray1) #find pair points (only those getting 3D verts)
 
-        sample_pts1 = get_sample_pts(rn.r) #first time using intial rn
-        #get back projection 3D verts and id of 2D points which can find corresponding verts
-        intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
-        pair_pts1 = get_pair_pts(observed1, sample_pts1, index_ray1) #find pair points (only those getting 3D verts)
+            sample_pts2 = get_sample_pts(rn2.r)
+            intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
+            sp_ins_pts2 = []
+            sp_index_ray2 = []
+            for j in range(index_tri2.size):
+                if teeth_row_mesh.faces_num[i] <= index_tri2[j] and index_tri2[j] < teeth_row_mesh.faces_num[i + 1]:
+                    sp_ins_pts2.append(intersection_pts2[j])
+                    sp_index_ray2.append(index_ray2[j])
+            sp_ins_pts2 = np.vstack(sp_ins_pts2)
+            sp_index_ray2 = np.squeeze(sp_index_ray2)
+            pair_pts2 = get_pair_pts(observed2, sample_pts2, sp_index_ray2)
 
-        sample_pts2 = get_sample_pts(rn2.r)
-        intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
-        pair_pts2 = get_pair_pts(observed2, sample_pts2, index_ray2)
+            sample_pts3 = get_sample_pts(rn3.r)
+            intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
+            sp_ins_pts3 = []
+            sp_index_ray3 = []
+            for j in range(index_tri3.size):
+                if teeth_row_mesh.faces_num[i] <= index_tri3[j] and index_tri3[j] < teeth_row_mesh.faces_num[i + 1]:
+                    sp_ins_pts3.append(intersection_pts3[j])
+                    sp_index_ray3.append(index_ray3[j])
+            sp_ins_pts3 = np.vstack(sp_ins_pts3)
+            sp_index_ray3 = np.squeeze(sp_index_ray3)
+            pair_pts3 = get_pair_pts(observed3, sample_pts3, sp_index_ray3)
 
-        sample_pts3 = get_sample_pts(rn3.r)
-        intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
-        pair_pts3 = get_pair_pts(observed3, sample_pts3, index_ray3)
+            sample_pts4 = get_sample_pts(rn4.r)
+            intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
+            sp_ins_pts4 = []
+            sp_index_ray4 = []
+            for j in range(index_tri4.size):
+                if teeth_row_mesh.faces_num[i] <= index_tri4[j] and index_tri4[j] < teeth_row_mesh.faces_num[i + 1]:
+                    sp_ins_pts4.append(intersection_pts4[j])
+                    sp_index_ray4.append(index_ray4[j])
+            sp_ins_pts4 = np.vstack(sp_ins_pts4)
+            sp_index_ray4 = np.squeeze(sp_index_ray4)
+            pair_pts4 = get_pair_pts(observed4, sample_pts4, sp_index_ray4)
 
-        sample_pts4 = get_sample_pts(rn4.r)
-        intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
-        pair_pts4 = get_pair_pts(observed4, sample_pts4, index_ray4)
+            # pars = np.array([0, 0, 0, 0, 0, 0], dtype='float32')
+            pars = Parameters()
+            pars.add('rtx', value=0)
+            pars.add('rty', value=0)
+            pars.add('rtz', value=0)
+            pars.add('tx', value=0)
+            pars.add('ty', value=0)
+            pars.add('tz', value=0)
+            out = lmfit.minimize(residual_rtt_allview, pars,
+                                args=(mean, sp_ins_pts1, sp_ins_pts2, sp_ins_pts3, sp_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
+                                method='leastsq')
+            err_dif = err - out.chisqr
+            err = out.chisqr
+            # out.params.pretty_print()
+            print out.message, err
 
-        # pars = np.array([0, 0, 0, 0, 0, 0], dtype='float32')
-        pars = Parameters()
-        pars.add('rtx', value=0)
-        pars.add('rty', value=0)
-        pars.add('rtz', value=0)
-        pars.add('tx', value=0)
-        pars.add('ty', value=0)
-        pars.add('tz', value=0)
-        out = lmfit.minimize(residual_rtt_allview, pars,
-                             args=(mean, intersection_pts1, intersection_pts2, intersection_pts3, intersection_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
-                             method='leastsq')
-        err_dif = err - out.chisqr
-        err = out.chisqr
-        # out.params.pretty_print()
-        print out.message, err
+            # rn_c = deepcopy(rn.r)
+            # rn_c[rn_c[:, :, 0] > 0] *= [1, 0, 0]
+            # ob1_dc = deepcopy(observed1)
+            # ob1_dc[ob1_dc[:, :, 0] > 0] *= [0, 1, 0]
+            # plt.imshow(rn_c + ob1_dc)
+            # plt.show()
+            # Mesh.save_to_obj('result/V_row0.obj', V_row, row_mesh.f)
 
-        # rn_c = deepcopy(rn.r)
-        # rn_c[rn_c[:, :, 0] > 0] *= [1, 0, 0]
-        # ob1_dc = deepcopy(observed1)
-        # ob1_dc[ob1_dc[:, :, 0] > 0] *= [0, 1, 0]
-        # plt.imshow(rn_c + ob1_dc)
-        # plt.show()
-        # Mesh.save_to_obj('result/V_row0.obj', V_row, row_mesh.f)
+            tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
+            tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
+            print tmprt, tmpt
+            V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
 
-        tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
-        tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
-        print tmprt, tmpt
-        V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
+            #reproject 2D contour
+            rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+            rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+            rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+            rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
 
-        #reproject 2D contour
-        rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
-                                  c=ch.array([w, h]) / 2.,
-                                  k=ch.zeros(5))
-        rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
+            # Mesh.save_to_obj('result/V_row_op.obj', V_row, row_mesh.f)
+            # rn_c2 = deepcopy(rn.r)
+            # rn_c2[rn_c2[:, :, 0] > 0] *= [0, 1, 0]
+            #
+            # plt.imshow(rn_c2 + rn_c)
+            # plt.show()
+            # break
+            iter += 1
 
-        # Mesh.save_to_obj('result/V_row_op.obj', V_row, row_mesh.f)
-        # rn_c2 = deepcopy(rn.r)
-        # rn_c2[rn_c2[:, :, 0] > 0] *= [0, 1, 0]
-        #
-        # plt.imshow(rn_c2 + rn_c)
-        # plt.show()
-        # break
-        iter += 1
+        print("tooth id: %d error: %f --- %s seconds ---" % (i, err, time.time() - start_time))
+        start_time = time.time()
 
     Mesh.save_to_obj('result/V_row_opm.obj', V_row, row_mesh.f)
 
