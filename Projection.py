@@ -9,6 +9,7 @@ import vtk
 from opendr.everything import *
 from opendr.renderer import BoundaryRenderer
 from opendr.renderer import ColoredRenderer
+from opendr.renderer import DepthRenderer
 from opendr.camera import ProjectPoints
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -75,6 +76,43 @@ def back_projection(sample_pts, rt, t, cur_Vrow, faces):
 
     return intersection_pts_world, index_ray, index_tri
 
+def back_projection_depth(sample_pts, rt, t, dmap):
+    Crt = np.array(rt.r)
+    Ct = np.array(t.r)
+    reversed_imgpts = []
+    index = len(sample_pts)
+    for i in range(index):
+        # print sample_pts[i]
+        tmp = [float(sample_pts[i][1] - 320) / 320, float(sample_pts[i][0] - 240) / 320, 1]
+        # print tmp
+        reversed_imgpts.append(tmp)
+    # print index
+
+    Verts_d = []
+    for i in range(index):
+        # print reversed_imgpts[i][0], reversed_imgpts[i][1]
+        d = dmap[sample_pts[i][0], sample_pts[i][1]]
+        tmp = [reversed_imgpts[i][0] * d, reversed_imgpts[i][1] * d, d]
+        Verts_d.append(tmp)
+    Verts_d = np.vstack(Verts_d)
+
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    t_vec = Ct.T
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = r_mat
+    cor_mtx[0:3, 3] = t_vec
+    cor_mtx[3, 3] = 1
+    # print cor_mtx
+    inv_cormtx = np.linalg.inv(cor_mtx)
+
+    Verts_d_world = []
+    for i in range(Verts_d.shape[0]):
+        tmp_v = inv_cormtx.dot(np.array([Verts_d[i][0], Verts_d[i][1], Verts_d[i][2], 1]).T)
+        Verts_d_world.append([tmp_v[0], tmp_v[1], tmp_v[2]])
+    Verts_d_world = np.vstack(Verts_d_world)
+
+    return Verts_d_world
 
 
 # if __name__ == '__main__':
@@ -129,6 +167,7 @@ def back_projection(sample_pts, rt, t, cur_Vrow, faces):
 #     # imtmp = simple_renderer(rn, m.v, m.f)
 #
 #     rn = BoundaryRenderer()
+#     drn = DepthRenderer()
 #     # rn.camera = ProjectPoints(v=V_row, rt=ch.zeros(3), t=ch.array([0, 0, 0]), f=ch.array([w, w]) / 2.,
 #     #                           c=ch.array([w, h]) / 2.,
 #     #                           k=ch.zeros(5))
@@ -153,6 +192,9 @@ def back_projection(sample_pts, rt, t, cur_Vrow, faces):
 #     rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([0, -1.5, 0.2]), f=ch.array([w, w]) / 2.,
 #                                c=ch.array([w, h]) / 2.,
 #                                k=ch.zeros(5))
+#     drn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([0, -1.5, 0.2]), f=ch.array([w, w]) / 2.,
+#                               c=ch.array([w, h]) / 2.,
+#                               k=ch.zeros(5))
 #     # 13282
 #     # rt = ch.array([0, -0.25, 0.1]) * np.pi/2
 #     # rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([0.7, 0.5, 0]), f=ch.array([w, w]) / 2.,
@@ -169,12 +211,18 @@ def back_projection(sample_pts, rt, t, cur_Vrow, faces):
 #     #                               k=ch.zeros(5))
 #     rn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
 #     rn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+#     drn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
+#     drn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
 #
-#
+#     # plt.imshow(drn.r, cmap='gray')
+#     # plt.show()
+#     #
+#     # print drn.r
 #
 #
 #     #Sample points
 #     contour1 = deepcopy(rn.r)
+#     dmap = deepcopy(drn.r)
 #     sample_pts = []
 #     # print contour1.size
 #
@@ -221,6 +269,16 @@ def back_projection(sample_pts, rt, t, cur_Vrow, faces):
 #         # ax.scatter(tmp[0], tmp[1], tmp[2], marker= 'o')
 #
 #     # plt.show()
+#
+#     #get depth of reversed image points, calc 3D points
+#     Verts_d = []
+#     for i in range(index):
+#         # print reversed_imgpts[i][0], reversed_imgpts[i][1]
+#         d = dmap[sample_pts[i][0], sample_pts[i][1]]
+#         tmp = [reversed_imgpts[i][0]*d, reversed_imgpts[i][1]*d, d]
+#         Verts_d.append(tmp)
+#     Mesh.save_to_obj('result/Verts_depth.obj', Verts_d, None)
+#
 #
 #     #Calculate Vertices coordinates in Camera coordinate system
 #     V_row1 = deepcopy(V_row.r)
@@ -305,5 +363,3 @@ def back_projection(sample_pts, rt, t, cur_Vrow, faces):
 #     # observed2 = load_image(img2_file_path)
 #     # observed3 = load_image(img3_file_path)
 #     # observed4 = load_image(img4_file_path)
-
-
