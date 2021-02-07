@@ -213,7 +213,8 @@ class TeethRowMesh(object):
             self.row_mesh.v[self.start_idx_list[which]:self.start_idx_list[which + 1], :] = self.mesh_list[which].v
             return
 
-        self.row_mesh.v = self.row_mesh.v.dot(cv2.Rodrigues(np.asarray(np.array(rv), np.float64))[0])
+        mean = np.mean(self.row_mesh.v, axis=0)
+        self.row_mesh.v = (self.row_mesh.v-mean).dot(cv2.Rodrigues(np.asarray(np.array(rv), np.float64))[0])+mean
         for m in self.mesh_list:
             m.v = m.v.dot(cv2.Rodrigues(np.asarray(np.array(rv), np.float64))[0])
 

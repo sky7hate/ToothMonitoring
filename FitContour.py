@@ -55,7 +55,8 @@ def get_sample_pts(contour):
     # print index, cc
     return f_sample_pts
 
-def get_pair_pts(gt_contour, sp_pts, pair_id):
+def get_pair_pts(gt_contour, sp_pts, pair_id=None):
+    #sample ground truth contour points
     gt_pts = []
     index = 0
     for i in range(640):
@@ -64,13 +65,17 @@ def get_pair_pts(gt_contour, sp_pts, pair_id):
                 gt_pts.append([j, i])
                 index += 1
 
+    #build KDTree for gt points
     gtpts_tree = scipy.spatial.KDTree(gt_pts)
+    #get sample points which finds back projection 3D verts
     s_sp_pts = []
-    if pair_id != None:
+    if pair_id is not None:
         for i in range(pair_id.shape[0]):
             s_sp_pts.append(sp_pts[pair_id[i]])
     else:
         s_sp_pts = sp_pts
+
+    #pairing
     pair_pts = []
     pair_res = gtpts_tree.query(s_sp_pts)
     for i in range(len(pair_res[1])):
@@ -88,6 +93,7 @@ def get_pair_pts(gt_contour, sp_pts, pair_id):
     #     pair_pts.append(gt_pts[min_index])
     return pair_pts
 
+#residual for only translation
 def residual_t(pars, verts, Crt, Ct, pair_pts):
     tp = np.array([pars['tx'], pars['ty'], pars['tz']])
     t_verts = verts + tp
@@ -110,10 +116,11 @@ def residual_t(pars, verts, Crt, Ct, pair_pts):
 
     return residuals
 
-def residual_rtt(pars, verts, Crt, Ct, pair_pts):
+#residual for translation and rotation for one view
+def residual_rtt(pars, offset, verts, Crt, Ct, pair_pts):
     tp = np.array([pars['tx'], pars['ty'], pars['tz']])
     rtp = np.array([pars['rtx'], pars['rty'], pars['rtz']])
-    t_verts = verts.dot(Rodrigues(rtp)) + tp
+    t_verts = (verts-offset).dot(Rodrigues(rtp)) + offset + tp
     Crt = np.array(Crt.r)
     Ct = np.array(Ct.r)
     tmpr = R.from_rotvec(Crt)
@@ -135,6 +142,7 @@ def residual_rtt(pars, verts, Crt, Ct, pair_pts):
 
     return residuals
 
+#residual for translation and rotation for all the views (individual tooth)
 def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1, Crt2, Ct2, Crt3, Ct3, Crt4, Ct4, pair_pts1, pair_pts2, pair_pts3, pair_pts4):
     residuals = []
     tp = np.array([pars['tx'], pars['ty'], pars['tz']])
@@ -244,8 +252,8 @@ if __name__ == '__main__':
     # t_row = ch.zeros(3)
     # R_row = ch.array([0, 0, 0.06])
     # t_row = ch.array([0, 0.06, 0])
-    R_row = ch.array([0, 0, 0.06])
-    t_row = ch.array([0, 0.06, 0])
+    R_row = ch.array([0, 0, 0.04])
+    t_row = ch.array([0, 0.04, 0])
     teeth_row_mesh.rotate(R_row)
     teeth_row_mesh.translate(t_row)
 
@@ -459,6 +467,60 @@ if __name__ == '__main__':
 
     start_time = time.time()
     total_time = 0
+
+    # #Camera pose calibration
+    # rn_contours = []
+    # rn_contours.append(rn)
+    # rn_contours.append(rn2)
+    # rn_contours.append(rn3)
+    # rn_contours.append(rn4)
+    # rn_rs = []
+    # rn_rs.append(rt1)
+    # rn_rs.append(rt2)
+    # rn_rs.append(rt3)
+    # rn_rs.append(rt4)
+    # rn_ts = []
+    # rn_ts.append(t1)
+    # rn_ts.append(t2)
+    # rn_ts.append(t3)
+    # rn_ts.append(t4)
+    # obs = []
+    # obs.append(observed1)
+    # obs.append(observed2)
+    # obs.append(observed3)
+    # obs.append(observed4)
+    # for i in range(4):
+    #     err = 100000
+    #     err_dif = 100
+    #     iter = 0
+    #     while not(err < 10 or err_dif < 1 or iter > 20):
+    #         mean = np.mean(V_row.r, axis=0)
+    #         sample_pts = get_sample_pts(rn_contours[i].r)
+    #         intersection_pts, index_ray, index_tri = pj.back_projection(sample_pts, rn_rs[i], rn_ts[i], V_row, row_mesh.f)
+    #         pair_pts = get_pair_pts(obs[i], sample_pts, index_ray)
+    #
+    #         pars = Parameters()
+    #         pars.add('rtx', value=0)
+    #         pars.add('rty', value=0)
+    #         pars.add('rtz', value=0)
+    #         pars.add('tx', value=0)
+    #         pars.add('ty', value=0)
+    #         pars.add('tz', value=0)
+    #         out = lmfit.minimize(residual_rtt, pars, args=(mean, intersection_pts, rn_rs[i], rn_ts[i], pair_pts), method='leastsq')
+    #
+    #         err_dif = err - out.chisqr
+    #         if (err_dif > 0):
+    #             err = out.chisqr
+    #             # out.params.pretty_print()
+    #             tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
+    #             tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
+    #             print tmprt, tmpt
+    #             Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
+    #             V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
+    #             # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
+    #
+    #         print out.message, out.chisqr
+
     #individual tooth pose estimation
     for i in range(numTooth):
         err = 100000

@@ -18,6 +18,7 @@ import time
 import cv2
 from config import cfg
 import os
+from scipy.spatial.transform import Rotation as R
 
 if __name__ == '__main__':
 
@@ -39,20 +40,24 @@ if __name__ == '__main__':
     # t0 = ch.asarray(teeth_row_mesh.positions_in_row)
 
     numTooth = len(teeth_row_mesh.mesh_list)
-    Vi_list = [ch.array(teeth_row_mesh.mesh_list[i].v) for i in range(numTooth)]
-    Vi_offset = [ch.mean(Vi_list[i], axis=0) for i in range(numTooth)]
-    print(Vi_offset)
 
-    Vi_center = [(Vi_list[i] - Vi_offset[i]) for i in range(numTooth)]
 
     # Ri_list = [ch.zeros(3) for i in range(numTooth)]
     # ti_list = [ch.zeros(3) for i in range(numTooth)]
     # # R_row = ch.zeros(3)
     # # t_row = ch.zeros(3)
-    # # R_row = ch.array([0, 0, 0.06])
-    # # t_row = ch.array([0, 0.06, 0])
+    R_row = ch.array([0, 0, 0.06])
+    t_row = ch.array([0, 0.06, 0])
     # R_row = ch.array([0, 0, 0.01])
-    t_row = ch.array([0, 0, 0])
+    # t_row = ch.array([0, 0, 0])
+    # teeth_row_mesh.rotate(R_row)
+    # teeth_row_mesh.translate(t_row)
+
+    Vi_list = [ch.array(teeth_row_mesh.mesh_list[i].v) for i in range(numTooth)]
+    Vi_offset = [ch.mean(Vi_list[i], axis=0) for i in range(numTooth)]
+    Vi_center = [(Vi_list[i] - Vi_offset[i]) for i in range(numTooth)]
+
+    V_row = ch.vstack([Vi_list[i] for i in range(numTooth)])
     # V_row = t_row + ch.vstack(
     #     [ti_list[i] + Vi_offset[i] + Vi_center[i].dot(Rodrigues(Ri_list[i])) for i in range(numTooth)]).dot(
     #     Rodrigues(R_row))
@@ -67,27 +72,50 @@ if __name__ == '__main__':
     observed4 = load_image(img4_file_path)
 
 
-    def residual(variables, obs1, verts):
-        w, h = (640, 480)
+    w, h = (640, 480)
 
-        V_row = variables + verts;
 
-        rn = BoundaryRenderer()
-        # 12681
-        rt = ch.array([0, -0.3, 0]) * np.pi / 2
-        rn.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([1.2, 0.2, 0]), f=ch.array([w, w]) / 2.,
-                                  c=ch.array([w, h]) / 2.,
-                                  k=ch.zeros(5))
-        rn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
-        rn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    rn = BoundaryRenderer()
+    # 12681
+    mean = np.mean(V_row.r, axis=0)
+    rt = ch.array([0, -0.3, 0]) * np.pi / 2
+    rtn = np.array(rt.r)
+    tmprt = R.from_rotvec(rtn)
+    rt_mat = tmprt.as_dcm()
+    inv_rt = np.linalg.inv(rt_mat)
+    tmprt = R.from_dcm(inv_rt)
+    rt_q = tmprt.as_quat()
+    t = ch.array([1.2, 0.2, 0])
+    Crt = np.array(R_row.r)
+    Ct = np.array(t_row.r)
+    tmpr = R.from_rotvec(Crt)
+    r_mat = tmpr.as_dcm()
+    # t_vec = Ct.T
+    # cor_mtx = np.zeros((3, 3), dtype='float32')
+    # cor_mtx[0:3, 0:3] = r_mat
+    # cor_mtx[0:3, 3] = t_vec
+    # cor_mtx[3, 3] = 1
+    # print cor_mtx
+    inv_r = np.linalg.inv(r_mat)
+    tmpr = R.from_dcm(inv_r)
+    r_q = tmpr.as_quat()
+    # print inv_cormtx
+    print r_q,rt_q
+    t1 = -((-t - mean).dot(inv_r)+mean-Ct)
+    rc_mat = np.linalg.inv((R.from_quat(r_q*rt_q)).as_dcm())
+    # rc_mat = np.linalg.inv(inv_r.dot(inv_rt))
+    tmprt = R.from_dcm(rc_mat)
+    rt1 = tmprt.as_rotvec()
+    # rt1 = rt
+    print rt1, t1
 
-        n_level = 6
-        normalizations = ['size', 'SSE', None]
-        nth = 0
-        E_raw1 = rn - obs1
-        E_pyr1 = gaussian_pyramid(E_raw1, n_levels=n_level, normalization=normalizations[nth])  # , normalization='size'
+    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                              c=ch.array([w, h]) / 2.,
+                              k=ch.zeros(5))
+    rn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
+    rn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
 
-        return E_pyr1
+
 
     # w_s = 1.0e-1
     # E_sparse = 0
@@ -107,10 +135,16 @@ if __name__ == '__main__':
     ob2_dc[ob2_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob3_dc[ob3_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob4_dc[ob4_dc[:, :, 0] > 0] *= [0, 1, 0]
-    fit_vis = []
-    # ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
-    iter = 0
-    start_time = time.time()
+    rn1_dc = deepcopy(rn.r)
+    rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
+    plt.imshow(rn1_dc + ob1_dc)
+    # plt.show()
+    plt.pause(20)
+    scipy.misc.imsave('result/test1.jpg', rn1_dc + ob1_dc)
+    # fit_vis = []
+    # # ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
+    # iter = 0
+    # start_time = time.time()
 
 
     # def cb(_):
@@ -165,100 +199,100 @@ if __name__ == '__main__':
     #     plt.pause(5)
 
 
-    stages = 1
-    methods = ['dogleg', 'SLSQP', 'Newton-CG', 'BFGS']
-    method = 3  # 'trust-ncg' #'newton-cg' #''BFGS' #'dogleg'
-    # option = {'maxiter': 1000, 'disp': 1, 'e_3': 1.0e-4}
-    option = {'disp': True}
-    # option = None
-    tol = 1e-15
-    ch.random.seed(19921122)
-    random_move = lambda x, order: (1.0 - 1.0 / np.e ** order + 2 * np.random.rand(3) / np.e ** order) * x
-    start_time = time.time()
-    # todo: only a few teeth moved, so adding a sparse constraint to Ri_list and ti_list should make a better result.
-    print ('OPTIMIZING TRANSLATION, ROTATION: method=[{}]'.format(methods[method]))
-    for stage in range(stages):
-        print('## Stage {} ##'.format(stage))
-        # randomly jump around the solution to help get rid of local minimum,=
-        #  as the stage increase, the movement should be smaller
-        # if stage != 0:
-        #     # R_row[:] = random_move(R_row.r, stage)
-        #     # t_row[:] = random_move(t_row.r, stage)
-        #     for i in range(numTooth):
-        #         Ri_list[i][:] = random_move(Ri_list[i].r, stage + 4)
-        #         ti_list[i][:] = random_move(ti_list[i].r, stage + 4)
-        # ch.minimize({'pyr1': E_pyr1}, x0=[t_row], callback=cb, method=method, options=option, tol=tol)
-        # ch.minimize({'pyr2': E_pyr1}, x0=[R_row, t_row], callback=cb, method=method, options=option, tol=tol)
-        # ch.minimize({'pyr3': E_pyr1}, x0=ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
-        # ch.minimize({'pyr4': E_pyr1}, x0=Ri_list + ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
-
-        if stage == 0:
-            print('Sub-stage {}-1: x0=[t_row]'.format(stage))
-            op.minimize(residual, x0=[t_row], args=(observed1, Vi_list), method=methods[method], options=option, tol=tol)
-
-        #     print('Sub-stage {}-2: x0=[R_row, t_row]'.format(stage))
-        #     op.minimize(objs, x0=[R_row, t_row], callback=cb, method=methods[method], options=option, tol=tol)
-        #
-        # # print('Sub-stage {}-3: x0=[R_row, t_row] + ti_list'.format(stage))
-        # # ch.minimize(objs, x0=[R_row, t_row] + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
-        #
-        # for k in range(3):
-        #     for i in range(2):
-        #         print('Sub-stage {}-3, round {}: x0=ti_list'.format(stage, i))
-        #         for j in range(numTooth):
-        #             ch.minimize(objs, x0=[ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)
-        #
-        #     for i in range(3):
-        #         print('Sub-stage {}-4, round {}: x0=Ri_list'.format(stage, i))
-        #         for j in range(numTooth):
-        #             ch.minimize(objs, x0=[Ri_list[j]], callback=cb, method=methods[method], options=option,
-        #                         tol=tol)  # Ri_list +
-        #
-        # for i in range(2):
-        #     print('Sub-stage {}-5, round {}: x0=Ri_list+ti_list'.format(stage, i))
-        #     for j in range(numTooth):
-        #         ch.minimize(objs, x0=[Ri_list[j], ti_list[j]], callback=cb, method=methods[method], options=option,
-        #                     tol=tol)  # Ri_list + ti_list
-
-        # print('Sub-stage {}-6: x0=[R_row, t_row] + Ri_list + ti_list'.format(stage))
-        # ch.minimize(objs, x0=[R_row, t_row] + Ri_list + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
-
-    #     Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), V_row.r, row_mesh.f)
-    #     t_c = len(teeth_row_mesh.mesh_list[0].v)
-    #     vert_t = [[] for i in range(numTooth)]
-    #     mvert_t = [[] for i in range(numTooth)]
-    #     idx = 0
-    #     for i in range(V_row.shape[0]):
-    #         if i < t_c:
-    #             vert_t[idx].append(V_row[i].r)
-    #         else:
-    #             idx += 1
-    #             vert_t[idx].append(V_row[i].r)
-    #             t_c += len(teeth_row_mesh.mesh_list[idx].v)
-    #         mvert_t[idx].append(moved_mesh.row_mesh.v[i])
+    # stages = 1
+    # methods = ['dogleg', 'SLSQP', 'Newton-CG', 'BFGS']
+    # method = 3  # 'trust-ncg' #'newton-cg' #''BFGS' #'dogleg'
+    # # option = {'maxiter': 1000, 'disp': 1, 'e_3': 1.0e-4}
+    # option = {'disp': True}
+    # # option = None
+    # tol = 1e-15
+    # ch.random.seed(19921122)
+    # random_move = lambda x, order: (1.0 - 1.0 / np.e ** order + 2 * np.random.rand(3) / np.e ** order) * x
+    # start_time = time.time()
+    # # todo: only a few teeth moved, so adding a sparse constraint to Ri_list and ti_list should make a better result.
+    # print ('OPTIMIZING TRANSLATION, ROTATION: method=[{}]'.format(methods[method]))
+    # for stage in range(stages):
+    #     print('## Stage {} ##'.format(stage))
+    #     # randomly jump around the solution to help get rid of local minimum,=
+    #     #  as the stage increase, the movement should be smaller
+    #     # if stage != 0:
+    #     #     # R_row[:] = random_move(R_row.r, stage)
+    #     #     # t_row[:] = random_move(t_row.r, stage)
+    #     #     for i in range(numTooth):
+    #     #         Ri_list[i][:] = random_move(Ri_list[i].r, stage + 4)
+    #     #         ti_list[i][:] = random_move(ti_list[i].r, stage + 4)
+    #     # ch.minimize({'pyr1': E_pyr1}, x0=[t_row], callback=cb, method=method, options=option, tol=tol)
+    #     # ch.minimize({'pyr2': E_pyr1}, x0=[R_row, t_row], callback=cb, method=method, options=option, tol=tol)
+    #     # ch.minimize({'pyr3': E_pyr1}, x0=ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
+    #     # ch.minimize({'pyr4': E_pyr1}, x0=Ri_list + ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
     #
-    #     for i in range(numTooth):
-    #         # Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), vert_t[i], teeth_row_mesh.mesh_list[i].f)
-    #         # print(i)
-    #         d, Z, tform = p.procrustes(np.array(mvert_t[i]), np.array(vert_t[i]), scaling=False)
-    #         # new_mvert_t = mvert_t / 2.0
-    #         # new_mvert_t *= moved_mesh.max_v
-    #         # new_vert_t = vert_t / 2.0
-    #         # new_vert_t *= teeth_row_mesh.max_v
-    #         # d1, Z1, tform1 = p.procrustes(np.array(new_mvert_t[i]), np.array(new_vert_t[i]), scaling=False)
-    #         # print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']), 'scale_reverse:', tform1['translation'], p.rotationMatrixToEulerAngles(tform1['rotation']))
-    #         print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'],
-    #                p.rotationMatrixToEulerAngles(tform['rotation']))
-    #     scipy.misc.imsave('result/fittingresult1_stage{}.jpg'.format(stage), rn.r)
-    #     scipy.misc.imsave('result/fittingresult2_stage{}.jpg'.format(stage), rn2.r)
-    #     scipy.misc.imsave('result/fittingresult3_stage{}.jpg'.format(stage), rn3.r)
-    #     scipy.misc.imsave('result/fittingresult4_stage{}.jpg'.format(stage), rn4.r)
-    #     # scipy.misc.imsave('result/fittingresult5_stage{}.jpg'.format(stage), rn5.r)
-    #     scipy.misc.imsave('result/fittingresult_diff1_stage{}.jpg'.format(stage), np.abs(E_raw1.r))
-    #     scipy.misc.imsave('result/fittingresult_diff2_stage{}.jpg'.format(stage), np.abs(E_raw2.r))
-    #     scipy.misc.imsave('result/fittingresult_diff3_stage{}.jpg'.format(stage), np.abs(E_raw3.r))
-    #     scipy.misc.imsave('result/fittingresult_diff4_stage{}.jpg'.format(stage), np.abs(E_raw4.r))
-    #     # scipy.misc.imsave('result/fittingresult_diff5_stage{}.jpg'.format(stage), np.abs(E_raw5.r))
+    #     if stage == 0:
+    #         print('Sub-stage {}-1: x0=[t_row]'.format(stage))
+    #         op.minimize(residual, x0=[t_row], args=(observed1, Vi_list), method=methods[method], options=option, tol=tol)
     #
-    # print("---Optimization takes %s seconds ---" % (time.time() - start_time))
-    # vw.release()
+    #     #     print('Sub-stage {}-2: x0=[R_row, t_row]'.format(stage))
+    #     #     op.minimize(objs, x0=[R_row, t_row], callback=cb, method=methods[method], options=option, tol=tol)
+    #     #
+    #     # # print('Sub-stage {}-3: x0=[R_row, t_row] + ti_list'.format(stage))
+    #     # # ch.minimize(objs, x0=[R_row, t_row] + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
+    #     #
+    #     # for k in range(3):
+    #     #     for i in range(2):
+    #     #         print('Sub-stage {}-3, round {}: x0=ti_list'.format(stage, i))
+    #     #         for j in range(numTooth):
+    #     #             ch.minimize(objs, x0=[ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)
+    #     #
+    #     #     for i in range(3):
+    #     #         print('Sub-stage {}-4, round {}: x0=Ri_list'.format(stage, i))
+    #     #         for j in range(numTooth):
+    #     #             ch.minimize(objs, x0=[Ri_list[j]], callback=cb, method=methods[method], options=option,
+    #     #                         tol=tol)  # Ri_list +
+    #     #
+    #     # for i in range(2):
+    #     #     print('Sub-stage {}-5, round {}: x0=Ri_list+ti_list'.format(stage, i))
+    #     #     for j in range(numTooth):
+    #     #         ch.minimize(objs, x0=[Ri_list[j], ti_list[j]], callback=cb, method=methods[method], options=option,
+    #     #                     tol=tol)  # Ri_list + ti_list
+    #
+    #     # print('Sub-stage {}-6: x0=[R_row, t_row] + Ri_list + ti_list'.format(stage))
+    #     # ch.minimize(objs, x0=[R_row, t_row] + Ri_list + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
+    #
+    # #     Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), V_row.r, row_mesh.f)
+    # #     t_c = len(teeth_row_mesh.mesh_list[0].v)
+    # #     vert_t = [[] for i in range(numTooth)]
+    # #     mvert_t = [[] for i in range(numTooth)]
+    # #     idx = 0
+    # #     for i in range(V_row.shape[0]):
+    # #         if i < t_c:
+    # #             vert_t[idx].append(V_row[i].r)
+    # #         else:
+    # #             idx += 1
+    # #             vert_t[idx].append(V_row[i].r)
+    # #             t_c += len(teeth_row_mesh.mesh_list[idx].v)
+    # #         mvert_t[idx].append(moved_mesh.row_mesh.v[i])
+    # #
+    # #     for i in range(numTooth):
+    # #         # Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), vert_t[i], teeth_row_mesh.mesh_list[i].f)
+    # #         # print(i)
+    # #         d, Z, tform = p.procrustes(np.array(mvert_t[i]), np.array(vert_t[i]), scaling=False)
+    # #         # new_mvert_t = mvert_t / 2.0
+    # #         # new_mvert_t *= moved_mesh.max_v
+    # #         # new_vert_t = vert_t / 2.0
+    # #         # new_vert_t *= teeth_row_mesh.max_v
+    # #         # d1, Z1, tform1 = p.procrustes(np.array(new_mvert_t[i]), np.array(new_vert_t[i]), scaling=False)
+    # #         # print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']), 'scale_reverse:', tform1['translation'], p.rotationMatrixToEulerAngles(tform1['rotation']))
+    # #         print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'],
+    # #                p.rotationMatrixToEulerAngles(tform['rotation']))
+    # #     scipy.misc.imsave('result/fittingresult1_stage{}.jpg'.format(stage), rn.r)
+    # #     scipy.misc.imsave('result/fittingresult2_stage{}.jpg'.format(stage), rn2.r)
+    # #     scipy.misc.imsave('result/fittingresult3_stage{}.jpg'.format(stage), rn3.r)
+    # #     scipy.misc.imsave('result/fittingresult4_stage{}.jpg'.format(stage), rn4.r)
+    # #     # scipy.misc.imsave('result/fittingresult5_stage{}.jpg'.format(stage), rn5.r)
+    # #     scipy.misc.imsave('result/fittingresult_diff1_stage{}.jpg'.format(stage), np.abs(E_raw1.r))
+    # #     scipy.misc.imsave('result/fittingresult_diff2_stage{}.jpg'.format(stage), np.abs(E_raw2.r))
+    # #     scipy.misc.imsave('result/fittingresult_diff3_stage{}.jpg'.format(stage), np.abs(E_raw3.r))
+    # #     scipy.misc.imsave('result/fittingresult_diff4_stage{}.jpg'.format(stage), np.abs(E_raw4.r))
+    # #     # scipy.misc.imsave('result/fittingresult_diff5_stage{}.jpg'.format(stage), np.abs(E_raw5.r))
+    # #
+    # # print("---Optimization takes %s seconds ---" % (time.time() - start_time))
+    # # vw.release()
