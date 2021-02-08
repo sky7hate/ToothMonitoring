@@ -55,7 +55,7 @@ def get_sample_pts(contour):
     # print index, cc
     return f_sample_pts
 
-def get_pair_pts(gt_contour, sp_pts, pair_id=None):
+def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
     #sample ground truth contour points
     gt_pts = []
     index = 0
@@ -77,9 +77,19 @@ def get_pair_pts(gt_contour, sp_pts, pair_id=None):
 
     #pairing
     pair_pts = []
+    new_ins_pts = []
     pair_res = gtpts_tree.query(s_sp_pts)
+
+    #trimming: set a threshhold to filter outliers
+    mean_dis = np.mean(pair_res, axis=1)[0]
+    # print mean_dis
+    threshhold = 2 * mean_dis
+
     for i in range(len(pair_res[1])):
-        pair_pts.append(gt_pts[pair_res[1][i]])
+        if pair_res[0][i] <= threshhold:
+            pair_pts.append(gt_pts[pair_res[1][i]])
+            new_ins_pts.append(ins_pts[i])
+    print len(pair_pts), 'out of', len(pair_res[1])
     # print pair_id.shape[0]
     # for i in range(pair_id.shape[0]):
     #     tmp_dis = 1000000
@@ -91,7 +101,7 @@ def get_pair_pts(gt_contour, sp_pts, pair_id=None):
     #             tmp_dis = cur_dis
     #             min_index = j
     #     pair_pts.append(gt_pts[min_index])
-    return pair_pts
+    return pair_pts, new_ins_pts
 
 #residual for only translation
 def residual_t(pars, verts, Crt, Ct, pair_pts):
@@ -556,7 +566,7 @@ if __name__ == '__main__':
             #     sp_ins_pts1 = np.vstack(sp_ins_pts1)
             #     sp_index_ray1 = np.squeeze(sp_index_ray1)
             #     pair_pts1 = get_pair_pts(observed1, sample_pts1, sp_index_ray1) #find pair points (only those getting 3D verts)
-            pair_pts1 = get_pair_pts(observed1, sample_pts1, None) #get pairing points
+            pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1) #get pairing points
             print('pairing time: %s s' % (time.time() - cur_time))
 
             sample_pts2 = get_sample_pts(rn2.r)
@@ -576,7 +586,7 @@ if __name__ == '__main__':
             #     sp_ins_pts2 = np.vstack(sp_ins_pts2)
             #     sp_index_ray2 = np.squeeze(sp_index_ray2)
             #     pair_pts2 = get_pair_pts(observed2, sample_pts2, sp_index_ray2)
-            pair_pts2 = get_pair_pts(observed2, sample_pts2, None)
+            pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
 
             sample_pts3 = get_sample_pts(rn3.r)
             sp_ins_pts3 = pj.back_projection_depth(sample_pts3, rt3, t3, drn3.r)
@@ -595,7 +605,7 @@ if __name__ == '__main__':
             #     sp_ins_pts3 = np.vstack(sp_ins_pts3)
             #     sp_index_ray3 = np.squeeze(sp_index_ray3)
             #     pair_pts3 = get_pair_pts(observed3, sample_pts3, sp_index_ray3)
-            pair_pts3 = get_pair_pts(observed3, sample_pts3, None)
+            pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
 
             sample_pts4 = get_sample_pts(rn4.r)
             sp_ins_pts4 = pj.back_projection_depth(sample_pts4, rt4, t4, drn4.r)
@@ -616,7 +626,7 @@ if __name__ == '__main__':
             #     sp_index_ray4 = np.squeeze(sp_index_ray4)
             #     # print sp_index_ray4.shape
             #     pair_pts4 = get_pair_pts(observed4, sample_pts4, sp_index_ray4)
-            pair_pts4 = get_pair_pts(observed4, sample_pts4, None)
+            pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
 
             cur_time = time.time()
 
@@ -629,7 +639,7 @@ if __name__ == '__main__':
             pars.add('ty', value=0)
             pars.add('tz', value=0)
             out = lmfit.minimize(residual_rtt_allview, pars,
-                                args=(mean, sp_ins_pts1, sp_ins_pts2, sp_ins_pts3, sp_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
+                                args=(mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
                                 method='leastsq')
             print('optimization time: %s s' % (time.time() - cur_time))
             cur_time = time.time()
@@ -640,6 +650,10 @@ if __name__ == '__main__':
                 tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
                 tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
                 print tmprt, tmpt
+
+                
+
+
                 Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
                 V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
                 # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
