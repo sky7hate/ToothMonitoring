@@ -20,6 +20,7 @@ import scipy.optimize as op
 import lmfit
 from lmfit import Parameters
 import time
+import random
 from scipy.spatial.transform import Rotation as R
 import cv2
 from config import cfg
@@ -234,6 +235,19 @@ def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1
 
     return residuals
 
+def randome_deviation(rseed, rd_range, td_range):
+    random.seed(rseed)
+    rx = random.random()
+    ry = random.uniform(0, 1-rx)
+    rz = random.uniform(0, 1-rx-ry)
+    randr = np.array([rx, ry, rz]) * np.pi/rd_range
+    tx = random.random()
+    ty = random.uniform(0, 1-tx)
+    tz = random.uniform(0, 1-tx-ty)
+    randt = np.array([tx, ty, tz]) * td_range
+    return randr, randt
+
+
 
 if __name__ == '__main__':
 
@@ -264,8 +278,15 @@ if __name__ == '__main__':
     # t_row = ch.array([0, 0.06, 0])
     R_row = ch.array([0, 0, 0.04])
     t_row = ch.array([0, 0.04, 0])
-    teeth_row_mesh.rotate(R_row)
-    teeth_row_mesh.translate(t_row)
+
+    #random deviation
+    for i in range(numTooth):
+        tmprd, tmptd = randome_deviation(i*i, 12, 0.07)
+        teeth_row_mesh.rotate(tmprd, i)
+        teeth_row_mesh.translate(tmptd, i)
+
+    # teeth_row_mesh.rotate(R_row)
+    # teeth_row_mesh.translate(t_row)
 
     Vi_list = [ch.array(teeth_row_mesh.mesh_list[i].v) for i in range(numTooth)]
     Vi_offset = [ch.mean(Vi_list[i], axis=0) for i in range(numTooth)]
