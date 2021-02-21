@@ -76,6 +76,7 @@ if __name__ == '__main__':
 
 
     rn = BoundaryRenderer()
+    crn = ColoredRenderer()
     # 12681
     mean = np.mean(V_row.r, axis=0)
     rt = ch.array([0, -0.3, 0]) * np.pi / 2
@@ -109,11 +110,19 @@ if __name__ == '__main__':
     # rt1 = rt
     print rt1, t1
 
-    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+    rn.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
+                              c=ch.array([w, h]) / 2.,
+                              k=ch.zeros(5))
+    crn.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
     rn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
     rn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    crn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
+    crn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
+
+    # plt.imshow(crn.r)
+    # plt.show()
 
 
 
@@ -136,11 +145,13 @@ if __name__ == '__main__':
     ob3_dc[ob3_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob4_dc[ob4_dc[:, :, 0] > 0] *= [0, 1, 0]
     rn1_dc = deepcopy(rn.r)
+    print np.argwhere(rn1_dc[:, :, 0]>0)
+    # print np.rint(rn1_dc[rn1_dc[:, :, 0] > 0][:, 0] * 20)
     rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
-    plt.imshow(rn1_dc + ob1_dc)
-    # plt.show()
-    plt.pause(20)
-    scipy.misc.imsave('result/test1.jpg', rn1_dc + ob1_dc)
+    # plt.imshow(rn1_dc + ob1_dc)
+    # # plt.show()
+    # plt.pause(20)
+    # scipy.misc.imsave('result/test1.jpg', rn1_dc + ob1_dc)
     # fit_vis = []
     # # ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
     # iter = 0

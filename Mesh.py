@@ -136,11 +136,13 @@ class TeethRowMesh(object):
         i = 0
 
         for m in self.mesh_list:
-            if i == 0:
-                m.vc = m.v * 0 + [1, 0.85, 0.85]
-                i = 1
-            else:
-                m.vc = m.v * 0. + 1
+            # if i == 0:
+            #     m.vc = m.v * 0 + [1, 0.85, 0.85]
+            #     i = 1
+            # else:
+            #     m.vc = m.v * 0. + 1
+            m.vc = m.v * 0 + [0.05*i, 1, 1]
+            i += 1
             verts_list.append(m.v)
             faces_list.append(m.f + numVerts)
             vc_list.append(m.vc)
@@ -259,7 +261,7 @@ def ReadPolyData(file_name):
     return poly_data
 
 
-def save_to_obj(filename, verts, faces):
+def save_to_obj(filename, verts, faces=None):
         """ write the verts and faces on file."""
         # print('#Vertices={}, #Faces={}'.format(verts.shape[0], faces.shape[0]))
         # print('#Faces = {}'.format(faces.shape[0]))
@@ -271,9 +273,10 @@ def save_to_obj(filename, verts, faces):
                 f.write('v %f %f %f\n' % tuple(vert))
 
             # write faces
-            f.write('# %d faces\n' % len(faces))
-            for face in faces:
-                f.write('f %d %d %d\n' % tuple(face + 1))
+            if faces is not None:
+                f.write('# %d faces\n' % len(faces))
+                for face in faces:
+                    f.write('f %d %d %d\n' % tuple(face + 1))
             # if (faces != None):
             #     # write faces
             #     f.write('# %d faces\n' % len(faces))

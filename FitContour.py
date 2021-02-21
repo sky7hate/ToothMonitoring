@@ -26,34 +26,45 @@ import cv2
 from config import cfg
 import os
 
-def get_sample_pts(contour):
+def get_sample_pts(contour, colormap = None, t_id = None):
     #decrease the size
-    contour1 = scipy.misc.imresize(contour, 0.5)
+    # contour1 = scipy.misc.imresize(contour, 0.5)
     #Sample points
     t_sample_pts = []
     f_sample_pts = []
     # print contour1.size
 
-    cc = 0
-    index = 0
-    for i in range(320):
-        for j in range(240):
-            if contour1[j, i, 0] > 0:
-                t_sample_pts.append([j, i])
-                index += 1
-            cc += 1
-            # if (i == 0) | (j == 0) | (i == 639) | (j == 479):
-            #     frame.append([j, i])
-    for i in range(index):
-        if contour[t_sample_pts[i][0]*2, t_sample_pts[i][1]*2, 0] > 0:
-            f_sample_pts.append([t_sample_pts[i][0]*2, t_sample_pts[i][1]*2])
-        elif contour[t_sample_pts[i][0]*2, t_sample_pts[i][1]*2+1, 0] > 0:
-            f_sample_pts.append([t_sample_pts[i][0]*2, t_sample_pts[i][1]*2+1])
-        elif contour[t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2, 0] > 0:
-            f_sample_pts.append([t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2])
-        elif contour[t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2+1, 0] > 0:
-            f_sample_pts.append([t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2+1])
+    # cc = 0
+    # index = 0
+    # for i in range(320):
+    #     for j in range(240):
+    #         if contour1[j, i, 0] > 0:
+    #             t_sample_pts.append([j, i])
+    #             index += 1
+    #         cc += 1
+    f_sample_pts = np.argwhere(contour[:, :, 0] > 0)
+    # index = t_sample_pts.shape[0]
+    # for i in range(index):
+    #     if contour[t_sample_pts[i][0]*2, t_sample_pts[i][1]*2, 0] > 0:
+    #         f_sample_pts.append([t_sample_pts[i][0]*2, t_sample_pts[i][1]*2])
+    #     elif contour[t_sample_pts[i][0]*2, t_sample_pts[i][1]*2+1, 0] > 0:
+    #         f_sample_pts.append([t_sample_pts[i][0]*2, t_sample_pts[i][1]*2+1])
+    #     elif contour[t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2, 0] > 0:
+    #         f_sample_pts.append([t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2])
+    #     elif contour[t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2+1, 0] > 0:
+    #         f_sample_pts.append([t_sample_pts[i][0]*2+1, t_sample_pts[i][1]*2+1])
+    f_sample_pts = np.vstack(f_sample_pts)
     # print index, cc
+    sp_pts = []
+    if t_id is not None:
+        # print np.argwhere(f_sample_pts[:, 0] >= 480)
+        # print colormap[f_sample_pts[:]]
+        # sp_pts = f_sample_pts[np.rint(colormap[f_sample_pts[:]][0]*20)== t_id]
+        for i in range(f_sample_pts.shape[0]):
+            if np.rint(colormap[f_sample_pts[i][0], f_sample_pts[i][1]][0]*20) == t_id:
+                sp_pts.append(f_sample_pts[i])
+        print len(sp_pts)
+        return sp_pts
     return f_sample_pts
 
 def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
@@ -299,7 +310,7 @@ if __name__ == '__main__':
     # V_comb = ch.vstack([ti_list[i] + Vi_list[i].mean(axis=0) + (Vi_list[i] - Vi_list[i].mean(axis=0)).dot(Rodrigues(Ri_list[i])) for i in range(numTooth)])
     # V_row = t_row + V_comb.mean(axis=0) + (V_comb - V_comb.mean(axis=0)).dot(Rodrigues(R_row))
 
-    # Mesh.save_to_obj('result/V_row_initial.obj', V_row.r, row_mesh.f)
+    # Mesh.save_to_obj('result/V_row_gt.obj', V_row.r, row_mesh.f)
 
     w, h = (640, 480)
 
@@ -311,6 +322,7 @@ if __name__ == '__main__':
 
     rn = BoundaryRenderer()
     drn = DepthRenderer()
+    crn = ColoredRenderer()
     # rn.camera = ProjectPoints(v=V_row, rt=ch.zeros(3), t=ch.array([0, 0, 0]), f=ch.array([w, w]) / 2.,
     #                           c=ch.array([w, h]) / 2.,
     #                           k=ch.zeros(5))
@@ -327,6 +339,9 @@ if __name__ == '__main__':
     drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
+    crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                               c=ch.array([w, h]) / 2.,
+                               k=ch.zeros(5))
 
     #13282
     # rt = ch.array([0, -0.25, 0.1]) * np.pi/2
@@ -346,9 +361,12 @@ if __name__ == '__main__':
     rn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
     drn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
     drn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    crn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
+    crn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
     rn2 = BoundaryRenderer()
     drn2 = DepthRenderer()
+    crn2 = ColoredRenderer()
     # rt = ch.array([0, 1, 0]) * np.pi / 2
     # rn2.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([-2, 0, 2]), f=ch.array([w, w]) / 2.,
     #                                c=ch.array([w, h]) / 2.,
@@ -364,6 +382,9 @@ if __name__ == '__main__':
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
     drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                               c=ch.array([w, h]) / 2.,
+                               k=ch.zeros(5))
+    crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -385,9 +406,12 @@ if __name__ == '__main__':
     rn2.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
     drn2.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
     drn2.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    crn2.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    crn2.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
     rn3 = BoundaryRenderer()
     drn3 = DepthRenderer()
+    crn3 = ColoredRenderer()
     # rt = ch.array([0, -1, 0]) * np.pi/2
     # rn3.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([2, 0, 2]), f=ch.array([w, w]) / 2.,
     #                                c=ch.array([w, h]) / 2.,
@@ -403,6 +427,9 @@ if __name__ == '__main__':
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
     drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                               c=ch.array([w, h]) / 2.,
+                               k=ch.zeros(5))
+    crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -424,10 +451,13 @@ if __name__ == '__main__':
     rn3.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
     drn3.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
     drn3.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    crn3.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    crn3.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
 
     rn4 = BoundaryRenderer()
     drn4 = DepthRenderer()
+    crn4 = ColoredRenderer()
     # rt = ch.array([0, -1, 0]) * np.pi/4
     # rn4.camera = ProjectPoints(v=V_row, rt=rt, t=ch.array([1.5, 0, 0.5]), f=ch.array([w, w]) / 2.,
     #                                c=ch.array([w, h]) / 2.,
@@ -443,6 +473,9 @@ if __name__ == '__main__':
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
     drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                               c=ch.array([w, h]) / 2.,
+                               k=ch.zeros(5))
+    crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -464,6 +497,8 @@ if __name__ == '__main__':
     rn4.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
     drn4.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
     drn4.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    crn4.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    crn4.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
     # rn5 = BoundaryRenderer()
     # # rt = ch.array([0, 1, 0]) * np.pi/4
@@ -564,14 +599,21 @@ if __name__ == '__main__':
             mean = np.mean(Vi_list[i].r, axis=0)
             # print mean
             curs_time = time.time()
-            sample_pts1 = get_sample_pts(rn.r) #first time using intial rn
+            sample_pts1 = get_sample_pts(rn.r, crn.r, i) #first time using intial rn
             print('sample point time: %s s' % (time.time() - curs_time))
             cur_time = time.time()
-            # get back projection 3D verts and id of 2D points which can find corresponding verts
-            sp_ins_pts1 = pj.back_projection_depth(sample_pts1, rt1, t1, drn.r)
+            if len(sample_pts1) < 2:
+                pair_pts1 = []
+                trim_ins_pts1 = []
+            else:
+                # get back projection 3D verts and id of 2D points which can find corresponding verts
+                sp_ins_pts1 = pj.back_projection_depth(sample_pts1, rt1, t1, drn.r)
+                print('back projection time: %s s' % (time.time() - cur_time))
+                cur_time = time.time()
+                pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1)  # get pairing points
+                print('pairing time: %s s' % (time.time() - cur_time))
+
             # intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
-            print('back projection time: %s s' % (time.time() - cur_time))
-            cur_time = time.time()
             # get separate tooth's corresponding verts and pair points
             # sp_ins_pts1 = []
             # sp_index_ray1 = []
@@ -587,11 +629,16 @@ if __name__ == '__main__':
             #     sp_ins_pts1 = np.vstack(sp_ins_pts1)
             #     sp_index_ray1 = np.squeeze(sp_index_ray1)
             #     pair_pts1 = get_pair_pts(observed1, sample_pts1, sp_index_ray1) #find pair points (only those getting 3D verts)
-            pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1) #get pairing points
-            print('pairing time: %s s' % (time.time() - cur_time))
 
-            sample_pts2 = get_sample_pts(rn2.r)
-            sp_ins_pts2 = pj.back_projection_depth(sample_pts2, rt2, t2, drn2.r)
+
+            sample_pts2 = get_sample_pts(rn2.r, crn2.r, i)
+            if len(sample_pts2) < 2:
+                pair_pts2 = []
+                trim_ins_pts2 = []
+            else:
+                sp_ins_pts2 = pj.back_projection_depth(sample_pts2, rt2, t2, drn2.r)
+                pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
+
             # intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
             # sp_ins_pts2 = []
             # sp_index_ray2 = []
@@ -607,10 +654,16 @@ if __name__ == '__main__':
             #     sp_ins_pts2 = np.vstack(sp_ins_pts2)
             #     sp_index_ray2 = np.squeeze(sp_index_ray2)
             #     pair_pts2 = get_pair_pts(observed2, sample_pts2, sp_index_ray2)
-            pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
 
-            sample_pts3 = get_sample_pts(rn3.r)
-            sp_ins_pts3 = pj.back_projection_depth(sample_pts3, rt3, t3, drn3.r)
+
+            sample_pts3 = get_sample_pts(rn3.r, crn3.r, i)
+            if len(sample_pts3) < 2:
+                pair_pts3 = []
+                trim_ins_pts3 = []
+            else:
+                sp_ins_pts3 = pj.back_projection_depth(sample_pts3, rt3, t3, drn3.r)
+                pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
+
             # intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
             # sp_ins_pts3 = []
             # sp_index_ray3 = []
@@ -626,10 +679,15 @@ if __name__ == '__main__':
             #     sp_ins_pts3 = np.vstack(sp_ins_pts3)
             #     sp_index_ray3 = np.squeeze(sp_index_ray3)
             #     pair_pts3 = get_pair_pts(observed3, sample_pts3, sp_index_ray3)
-            pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
 
-            sample_pts4 = get_sample_pts(rn4.r)
-            sp_ins_pts4 = pj.back_projection_depth(sample_pts4, rt4, t4, drn4.r)
+            sample_pts4 = get_sample_pts(rn4.r, crn4.r, i)
+            if len(sample_pts4) < 2:
+                pair_pts4 = []
+                trim_ins_pts4 = []
+            else:
+                sp_ins_pts4 = pj.back_projection_depth(sample_pts4, rt4, t4, drn4.r)
+                pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
+
             # intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
             # sp_ins_pts4 = []
             # sp_index_ray4 = []
@@ -647,7 +705,7 @@ if __name__ == '__main__':
             #     sp_index_ray4 = np.squeeze(sp_index_ray4)
             #     # print sp_index_ray4.shape
             #     pair_pts4 = get_pair_pts(observed4, sample_pts4, sp_index_ray4)
-            pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
+
 
             cur_time = time.time()
 
@@ -672,7 +730,8 @@ if __name__ == '__main__':
                 tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
                 print tmprt, tmpt
 
-                
+
+
 
 
                 Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
