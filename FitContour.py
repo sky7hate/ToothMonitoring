@@ -292,7 +292,7 @@ if __name__ == '__main__':
 
     #random deviation
     for i in range(numTooth):
-        tmprd, tmptd = randome_deviation(i*i, 12, 0.07)
+        tmprd, tmptd = randome_deviation(i*i, 18, 0.06)
         teeth_row_mesh.rotate(tmprd, i)
         teeth_row_mesh.translate(tmptd, i)
 
@@ -609,6 +609,8 @@ if __name__ == '__main__':
                 # get back projection 3D verts and id of 2D points which can find corresponding verts
                 sp_ins_pts1 = pj.back_projection_depth(sample_pts1, rt1, t1, drn.r)
                 print('back projection time: %s s' % (time.time() - cur_time))
+                if iter == 0:
+                    Mesh.save_to_obj('result/tooth{}_vertices.obj'.format(i), sp_ins_pts1)
                 cur_time = time.time()
                 pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1)  # get pairing points
                 print('pairing time: %s s' % (time.time() - cur_time))
@@ -765,6 +767,18 @@ if __name__ == '__main__':
             drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
                                        c=ch.array([w, h]) / 2.,
                                        k=ch.zeros(5))
+            crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                       c=ch.array([w, h]) / 2.,
+                                       k=ch.zeros(5))
+            crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                        c=ch.array([w, h]) / 2.,
+                                        k=ch.zeros(5))
+            crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                        c=ch.array([w, h]) / 2.,
+                                        k=ch.zeros(5))
+            crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                        c=ch.array([w, h]) / 2.,
+                                        k=ch.zeros(5))
             print('rerendering time: %s s' % (time.time() - cur_time))
             if (iter == 0):
                 print('one step time: %s s' % (time.time() - curs_time))
