@@ -71,11 +71,13 @@ def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
     #sample ground truth contour points
     gt_pts = []
     index = 0
-    for i in range(640):
-        for j in range(480):
-            if gt_contour[j, i, 0] > 0:
-                gt_pts.append([j, i])
-                index += 1
+    gt_pts = np.argwhere(gt_contour[:, :, 0] > 0.5)
+    # draw_pixel(np.array(gt_contour), gt_pts)
+    # for i in range(640):
+    #     for j in range(480):
+    #         if gt_contour[j, i, 0] > 0:
+    #             gt_pts.append([j, i])
+    #             index += 1
 
     #build KDTree for gt points
     gtpts_tree = scipy.spatial.KDTree(gt_pts)
@@ -113,7 +115,24 @@ def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
     #             tmp_dis = cur_dis
     #             min_index = j
     #     pair_pts.append(gt_pts[min_index])
+    # draw_pixel(np.array(gt_contour), pair_pts)
     return pair_pts, new_ins_pts
+
+#visualization for checking
+def draw_pixel(contour, points1, points2 = None):
+    img = deepcopy(contour)
+    for p in points1:
+        center = (p[1], p[0])
+        color = (255, 0, 0)
+        cv2.circle(img, center, 1, color, thickness=-1)
+    if points2 is not None:
+        for p in points2:
+            center = (p[1], p[0])
+            color = (0, 255, 0)
+            cv2.circle(img, center, 1, color, thickness=-1)
+    #cv2.imshow('pair points', img)
+    plt.imshow(img)
+    return 0
 
 #residual for only translation
 def residual_t(pars, verts, Crt, Ct, pair_pts):
@@ -295,6 +314,7 @@ if __name__ == '__main__':
         tmprd, tmptd = randome_deviation(i*i, 18, 0.06)
         teeth_row_mesh.rotate(tmprd, i)
         teeth_row_mesh.translate(tmptd, i)
+
 
     # teeth_row_mesh.rotate(R_row)
     # teeth_row_mesh.translate(t_row)

@@ -58,6 +58,11 @@ if __name__ == '__main__':
     Vi_center = [(Vi_list[i] - Vi_offset[i]) for i in range(numTooth)]
 
     V_row = ch.vstack([Vi_list[i] for i in range(numTooth)])
+
+    teeth_row_mesh.rotate(R_row)
+    teeth_row_mesh.translate(t_row)
+    Vi_list1 = [ch.array(teeth_row_mesh.mesh_list[i].v) for i in range(numTooth)]
+    V_row1 = ch.vstack([Vi_list1[i] for i in range(numTooth)])
     # V_row = t_row + ch.vstack(
     #     [ti_list[i] + Vi_offset[i] + Vi_center[i].dot(Rodrigues(Ri_list[i])) for i in range(numTooth)]).dot(
     #     Rodrigues(R_row))
@@ -76,50 +81,77 @@ if __name__ == '__main__':
 
 
     rn = BoundaryRenderer()
+    rn1 = BoundaryRenderer()
     crn = ColoredRenderer()
     # 12681
+    origin = np.array([0, 0, 0, 1]).T
+    X_o = np.array([1, 0, 0, 1]).T
+    Y_o = np.array([0, 1, 0, 1]).T
+    Z_o = np.array([0, 0, 1, 1]).T
     mean = np.mean(V_row.r, axis=0)
     rt = ch.array([0, -0.3, 0]) * np.pi / 2
     rtn = np.array(rt.r)
     tmprt = R.from_rotvec(rtn)
     rt_mat = tmprt.as_dcm()
     inv_rt = np.linalg.inv(rt_mat)
-    tmprt = R.from_dcm(inv_rt)
-    rt_q = tmprt.as_quat()
-    t = ch.array([1.2, 0.2, 0])
+    t = np.array([1.2, 0.2, 0])
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = rt_mat
+    cor_mtx[0:3, 3] = t.T
+    cor_mtx[3, 3] = 1
+    # print cor_mtx
+    inv_cormtx = np.linalg.inv(cor_mtx)
+
     Crt = np.array(R_row.r)
     Ct = np.array(t_row.r)
     tmpr = R.from_rotvec(Crt)
     r_mat = tmpr.as_dcm()
-    # t_vec = Ct.T
-    # cor_mtx = np.zeros((3, 3), dtype='float32')
-    # cor_mtx[0:3, 0:3] = r_mat
-    # cor_mtx[0:3, 3] = t_vec
-    # cor_mtx[3, 3] = 1
-    # print cor_mtx
     inv_r = np.linalg.inv(r_mat)
-    tmpr = R.from_dcm(inv_r)
-    r_q = tmpr.as_quat()
-    # print inv_cormtx
-    print r_q,rt_q
-    t1 = -((-t - mean).dot(inv_r)+mean-Ct)
-    rc_mat = np.linalg.inv((R.from_quat(r_q*rt_q)).as_dcm())
-    # rc_mat = np.linalg.inv(inv_r.dot(inv_rt))
+
+    print inv_r.dot(r_mat.dot(Ct))
+
+    print inv_cormtx.dot(origin)[0:3], inv_cormtx.dot(origin)[0:3]-mean, mean
+    new_O = inv_r.dot(inv_cormtx.dot(origin)[0:3]-mean) + mean - Ct
+    new_X = inv_r.dot(inv_cormtx.dot(X_o)[0:3]-mean) + mean - Ct
+    new_Y = inv_r.dot(inv_cormtx.dot(Y_o)[0:3]-mean) + mean - Ct
+    new_Z = inv_r.dot(inv_cormtx.dot(Z_o)[0:3]-mean) + mean - Ct
+
+    new_Mat = np.array([[new_X[0]-new_O[0], new_Y[0]-new_O[0], new_Z[0]-new_O[0], new_O[0]],
+                        [new_X[1]-new_O[1], new_Y[1]-new_O[1], new_Z[1]-new_O[1], new_O[1]],
+                        [new_X[2]-new_O[2], new_Y[2]-new_O[2], new_Z[2]-new_O[2], new_O[2]],
+                        [0, 0, 0, 1]])
+    new_RT = np.linalg.inv(new_Mat)
+    print new_Mat, new_RT
+
+    rc_mat = new_RT[0:3, 0:3]
     tmprt = R.from_dcm(rc_mat)
     rt1 = tmprt.as_rotvec()
+    t1 = new_RT[0:3, 3].T
+
+    # rc_mat = np.linalg.inv(inv_r.dot(inv_rt))
+    # t1 = -((-t.dot(rt_mat) - mean).dot(r_mat)+mean-Ct)
+    # rc_mat = np.linalg.inv((R.from_quat(r_q*rt_q)).as_dcm())
+
+    # tmprt = R.from_dcm(rc_mat)
+    # rt1 = tmprt.as_rotvec()
     # rt1 = rt
     print rt1, t1
 
-    rn.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
+    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
-    crn.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
+    rn1.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
+    # crn.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
+    #                           c=ch.array([w, h]) / 2.,
+    #                           k=ch.zeros(5))
     rn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
     rn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
-    crn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
-    crn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
+    rn1.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
+    rn1.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    # crn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
+    # crn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
     # plt.imshow(crn.r)
     # plt.show()
@@ -144,14 +176,16 @@ if __name__ == '__main__':
     ob2_dc[ob2_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob3_dc[ob3_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob4_dc[ob4_dc[:, :, 0] > 0] *= [0, 1, 0]
-    rn1_dc = deepcopy(rn.r)
-    print np.argwhere(rn1_dc[:, :, 0]>0)
+    rn_dc = deepcopy(rn.r)
+    rn1_dc = deepcopy(rn1.r)
+    # print np.argwhere(rn1_dc[:, :, 0]>0)
     # print np.rint(rn1_dc[rn1_dc[:, :, 0] > 0][:, 0] * 20)
-    rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
-    # plt.imshow(rn1_dc + ob1_dc)
+    rn_dc[rn_dc[:, :, 0] > 0] *= [1, 0, 0]
+    rn1_dc[rn1_dc[:, :, 0] > 0] *= [0, 0, 1]
+    plt.imshow(rn1_dc + rn_dc)
     # # plt.show()
-    # plt.pause(20)
-    # scipy.misc.imsave('result/test1.jpg', rn1_dc + ob1_dc)
+    plt.pause(20)
+    scipy.misc.imsave('result/compare0.jpg', rn1_dc + rn_dc)
     # fit_vis = []
     # # ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
     # iter = 0
