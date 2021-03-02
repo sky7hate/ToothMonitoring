@@ -277,6 +277,46 @@ def randome_deviation(rseed, rd_range, td_range):
     randt = np.array([tx, ty, tz]) * td_range
     return randr, randt
 
+def reverse_camerapose(c_rt, c_t, op_rt, op_t, mean):
+    origin = np.array([0, 0, 0, 1]).T
+    X_o = np.array([1, 0, 0, 1]).T
+    Y_o = np.array([0, 1, 0, 1]).T
+    Z_o = np.array([0, 0, 1, 1]).T
+    rtn = np.array(c_rt)
+    tmprt = R.from_rotvec(rtn)
+    rt_mat = tmprt.as_dcm()
+    inv_rt = np.linalg.inv(rt_mat)
+    t = np.array(c_t)
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = rt_mat
+    cor_mtx[0:3, 3] = t.T
+    cor_mtx[3, 3] = 1
+    # print cor_mtx
+    inv_cormtx = np.linalg.inv(cor_mtx)
+
+    # Crt = np.array(op_rt)
+    # Ct = np.array(t_row.r)
+    tmpr = R.from_rotvec(op_rt)
+    r_mat = tmpr.as_dcm()
+    inv_r = np.linalg.inv(r_mat)
+
+    new_O = inv_r.dot(inv_cormtx.dot(origin)[0:3] - mean) + mean - op_t
+    new_X = inv_r.dot(inv_cormtx.dot(X_o)[0:3] - mean) + mean - op_t
+    new_Y = inv_r.dot(inv_cormtx.dot(Y_o)[0:3] - mean) + mean - op_t
+    new_Z = inv_r.dot(inv_cormtx.dot(Z_o)[0:3] - mean) + mean - op_t
+
+    new_Mat = np.array([[new_X[0] - new_O[0], new_Y[0] - new_O[0], new_Z[0] - new_O[0], new_O[0]],
+                        [new_X[1] - new_O[1], new_Y[1] - new_O[1], new_Z[1] - new_O[1], new_O[1]],
+                        [new_X[2] - new_O[2], new_Y[2] - new_O[2], new_Z[2] - new_O[2], new_O[2]],
+                        [0, 0, 0, 1]])
+    new_RT = np.linalg.inv(new_Mat)
+    print new_Mat, new_RT
+
+    rc_mat = new_RT[0:3, 0:3]
+    tmprt = R.from_dcm(rc_mat)
+    new_crt = tmprt.as_rotvec()
+    new_ct = new_RT[0:3, 3].T
+    return new_crt, new_ct
 
 
 if __name__ == '__main__':
