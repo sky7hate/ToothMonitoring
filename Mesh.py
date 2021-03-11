@@ -73,8 +73,8 @@ class TeethRowMesh(object):
         max_v = np.max(np.abs(self.row_mesh.v))
         # mean = [[-7.44505049, -2.88865201, 5.98988344]]
         # max_v = 39.6236457824707
-        print mean
-        print max_v
+        # print mean
+        # print max_v
         # apply the same operation to the teeth_row, each individual tooth and their origin positions
         for m in self.mesh_list:
             m.v -= mean
@@ -209,16 +209,21 @@ class TeethRowMesh(object):
         if which is not None:
             mean = np.mean(self.mesh_list[which].v, axis=0, keepdims=True)
             self.mesh_list[which].v -= mean
-            self.mesh_list[which].v = self.mesh_list[which].v.dot(cv2.Rodrigues(np.asarray(np.array(rv), np.float64))[0])
+            self.mesh_list[which].v = self.mesh_list[which].v.dot(Rodrigues(np.array(rv)))
+            # self.mesh_list[which].v = Rodrigues(np.array(rv)).dot(self.mesh_list[which].v)
             self.mesh_list[which].v += mean
             # update the individual change in teeth row
             self.row_mesh.v[self.start_idx_list[which]:self.start_idx_list[which + 1], :] = self.mesh_list[which].v
             return
 
         mean = np.mean(self.row_mesh.v, axis=0)
-        self.row_mesh.v = (self.row_mesh.v-mean).dot(cv2.Rodrigues(np.asarray(np.array(rv), np.float64))[0])+mean
+        # print mean, self.row_mesh.v.shape
+        self.row_mesh.v = (self.row_mesh.v-mean).dot(Rodrigues(np.array(rv)))+mean
+        # self.row_mesh.v = Rodrigues(np.array(rv)).dot((self.row_mesh.v - mean)) + mean
+        # print self.row_mesh.v.shape
         for m in self.mesh_list:
-            m.v = m.v.dot(cv2.Rodrigues(np.asarray(np.array(rv), np.float64))[0])
+            m.v = (m.v-mean).dot(Rodrigues(np.array(rv))) + mean
+            # m.v = Rodrigues(np.array(rv)).dot((m.v - mean)) + mean
 
 
 def ReadPolyData(file_name):

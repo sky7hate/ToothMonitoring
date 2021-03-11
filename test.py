@@ -85,9 +85,12 @@ if __name__ == '__main__':
     crn = ColoredRenderer()
     # 12681
     origin = np.array([0, 0, 0, 1]).T
-    X_o = np.array([1, 0, 0, 1]).T
-    Y_o = np.array([0, 1, 0, 1]).T
-    Z_o = np.array([0, 0, 1, 1]).T
+    # X_o = np.array([1, 0, 0, 1]).T
+    # Y_o = np.array([0, 1, 0, 1]).T
+    # Z_o = np.array([0, 0, 1, 1]).T
+    X_o = np.array([1, 0, 0]).T
+    Y_o = np.array([0, 1, 0]).T
+    Z_o = np.array([0, 0, 1]).T
     mean = np.mean(V_row.r, axis=0)
     rt = ch.array([0, -0.3, 0]) * np.pi / 2
     rtn = np.array(rt.r)
@@ -107,26 +110,43 @@ if __name__ == '__main__':
     tmpr = R.from_rotvec(Crt)
     r_mat = tmpr.as_dcm()
     inv_r = np.linalg.inv(r_mat)
+    o_mtx = np.zeros((4, 4), dtype='float32')
+    o_mtx[0:3, 0:3] = np.linalg.inv(r_mat)
+    o_mtx[0:3, 3] = (mean - r_mat.dot(mean) + Ct).T
+    o_mtx[3, 3] = 1
+    # print cor_mtx
+    inv_omtx = np.linalg.inv(o_mtx)
 
-    print inv_r.dot(r_mat.dot(Ct))
+    # print inv_r.dot(r_mat.dot(Ct))
 
-    print inv_cormtx.dot(origin)[0:3], inv_cormtx.dot(origin)[0:3]-mean, mean
-    new_O = inv_r.dot(inv_cormtx.dot(origin)[0:3]-mean) + mean - Ct
-    new_X = inv_r.dot(inv_cormtx.dot(X_o)[0:3]-mean) + mean - Ct
-    new_Y = inv_r.dot(inv_cormtx.dot(Y_o)[0:3]-mean) + mean - Ct
-    new_Z = inv_r.dot(inv_cormtx.dot(Z_o)[0:3]-mean) + mean - Ct
+    # print inv_cormtx.dot(origin)[0:3], inv_cormtx.dot(origin)[0:3]-mean, mean
+    # new_O = inv_r.dot(inv_cormtx.dot(origin)[0:3]-mean) + mean - inv_r.dot(Ct)
+    new_O = inv_omtx.dot(inv_cormtx.dot(origin))
+    # new_X = r_mat.dot(inv_cormtx.dot(X_o)[0:3] - mean) + r_mat.dot(mean) + Ct
+    # new_Y = r_mat.dot(inv_cormtx.dot(Y_o)[0:3] - mean) + r_mat.dot(mean) + Ct
+    # new_Z = r_mat.dot(inv_cormtx.dot(Z_o)[0:3] - mean) + r_mat.dot(mean) + Ct
+    new_X = r_mat.dot(inv_rt.dot(X_o))
+    new_Y = r_mat.dot(inv_rt.dot(Y_o))
+    new_Z = r_mat.dot(inv_rt.dot(Z_o))
 
-    new_Mat = np.array([[new_X[0]-new_O[0], new_Y[0]-new_O[0], new_Z[0]-new_O[0], new_O[0]],
-                        [new_X[1]-new_O[1], new_Y[1]-new_O[1], new_Z[1]-new_O[1], new_O[1]],
-                        [new_X[2]-new_O[2], new_Y[2]-new_O[2], new_Z[2]-new_O[2], new_O[2]],
-                        [0, 0, 0, 1]])
-    new_RT = np.linalg.inv(new_Mat)
-    print new_Mat, new_RT
+    # new_Mat = np.array([[new_X[0] - new_O[0], new_Y[0] - new_O[0], new_Z[0] - new_O[0], new_O[0]],
+    #                     [new_X[1] - new_O[1], new_Y[1] - new_O[1], new_Z[1] - new_O[1], new_O[1]],
+    #                     [new_X[2] - new_O[2], new_Y[2] - new_O[2], new_Z[2] - new_O[2], new_O[2]],
+    #                     [0, 0, 0, 1]])
+    # new_Mat = np.array([[new_X[0], new_Y[0], new_Z[0], new_O[0]],
+    #                     [new_X[1], new_Y[1], new_Z[1], new_O[1]],
+    #                     [new_X[2], new_Y[2], new_Z[2], new_O[2]],
+    #                     [0, 0, 0, 1]])
+    new_RT = cor_mtx.dot(o_mtx)
+    # new_RT = np.linalg.inv(new_Mat)
+    # print new_Mat, new_RT
 
     rc_mat = new_RT[0:3, 0:3]
+    print np.linalg.det(rc_mat)
     tmprt = R.from_dcm(rc_mat)
     rt1 = tmprt.as_rotvec()
     t1 = new_RT[0:3, 3].T
+    # t1 = t
 
     # rc_mat = np.linalg.inv(inv_r.dot(inv_rt))
     # t1 = -((-t.dot(rt_mat) - mean).dot(r_mat)+mean-Ct)
@@ -140,7 +160,7 @@ if __name__ == '__main__':
     rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
-    rn1.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
+    rn1.camera = ProjectPoints(v=V_row1, rt=rt, t=t, f=ch.array([w, w]) / 2.,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
     # crn.camera = ProjectPoints(v=V_row, rt=rt, t=t, f=ch.array([w, w]) / 2.,
@@ -149,7 +169,7 @@ if __name__ == '__main__':
     rn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
     rn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
     rn1.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
-    rn1.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    rn1.set(v=V_row1, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
     # crn.frustum = {'near': 1., 'far': 10., 'width': w, 'height': h}
     # crn.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
@@ -181,11 +201,11 @@ if __name__ == '__main__':
     # print np.argwhere(rn1_dc[:, :, 0]>0)
     # print np.rint(rn1_dc[rn1_dc[:, :, 0] > 0][:, 0] * 20)
     rn_dc[rn_dc[:, :, 0] > 0] *= [1, 0, 0]
-    rn1_dc[rn1_dc[:, :, 0] > 0] *= [0, 0, 1]
+    rn1_dc[rn1_dc[:, :, 0] > 0] *= [0, 1, 1]
     plt.imshow(rn1_dc + rn_dc)
     # # plt.show()
     plt.pause(20)
-    scipy.misc.imsave('result/compare0.jpg', rn1_dc + rn_dc)
+    scipy.misc.imsave('result/compareZ45.jpg', rn1_dc + rn_dc)
     # fit_vis = []
     # # ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
     # iter = 0

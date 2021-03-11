@@ -34,14 +34,6 @@ def get_sample_pts(contour, colormap = None, t_id = None):
     f_sample_pts = []
     # print contour1.size
 
-    # cc = 0
-    # index = 0
-    # for i in range(320):
-    #     for j in range(240):
-    #         if contour1[j, i, 0] > 0:
-    #             t_sample_pts.append([j, i])
-    #             index += 1
-    #         cc += 1
     f_sample_pts = np.argwhere(contour[:, :, 0] > 0)
     # index = t_sample_pts.shape[0]
     # for i in range(index):
@@ -57,15 +49,22 @@ def get_sample_pts(contour, colormap = None, t_id = None):
     # print index, cc
     sp_pts = []
     if t_id is not None:
-        # print np.argwhere(f_sample_pts[:, 0] >= 480)
         # print colormap[f_sample_pts[:]]
         # sp_pts = f_sample_pts[np.rint(colormap[f_sample_pts[:]][0]*20)== t_id]
         for i in range(f_sample_pts.shape[0]):
-            if np.rint(colormap[f_sample_pts[i][0], f_sample_pts[i][1]][0]*20) == t_id:
+            # if np.rint(colormap[f_sample_pts[i][0], f_sample_pts[i][1]][0]*20) == t_id:
+            if check_around(colormap, t_id, f_sample_pts[i]):
                 sp_pts.append(f_sample_pts[i])
         print len(sp_pts)
         return sp_pts
     return f_sample_pts
+
+def check_around(colormap, t_id, checkpixel):
+    for i in range(-1, 1, 1):
+        for j in range(-1, 1, 1):
+            if np.rint(colormap[checkpixel[0]+i, checkpixel[1]+j][0]*20) == t_id and colormap[checkpixel[0]+i, checkpixel[1]+j][1]>0:
+                return True
+    return False
 
 def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
     #sample ground truth contour points
@@ -73,11 +72,6 @@ def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
     index = 0
     gt_pts = np.argwhere(gt_contour[:, :, 0] > 0.5)
     # draw_pixel(np.array(gt_contour), gt_pts)
-    # for i in range(640):
-    #     for j in range(480):
-    #         if gt_contour[j, i, 0] > 0:
-    #             gt_pts.append([j, i])
-    #             index += 1
 
     #build KDTree for gt points
     gtpts_tree = scipy.spatial.KDTree(gt_pts)
@@ -104,18 +98,8 @@ def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
             pair_pts.append(gt_pts[pair_res[1][i]])
             new_ins_pts.append(ins_pts[i])
     print len(pair_pts), 'out of', len(pair_res[1])
-    # print pair_id.shape[0]
-    # for i in range(pair_id.shape[0]):
-    #     tmp_dis = 1000000
-    #     min_index = 0
-    #     for j in range(index):
-    #         cur_dis = (sp_pts[pair_id[i]][0]-gt_pts[j][0])*(sp_pts[pair_id[i]][0]-gt_pts[j][0]) \
-    #                   + (sp_pts[pair_id[i]][1]-gt_pts[j][1])*(sp_pts[pair_id[i]][1]-gt_pts[j][1])
-    #         if cur_dis < tmp_dis:
-    #             tmp_dis = cur_dis
-    #             min_index = j
-    #     pair_pts.append(gt_pts[min_index])
-    # draw_pixel(np.array(gt_contour), pair_pts)
+
+    # draw_pixel(np.array(gt_contour), pair_pts, s_sp_pts)
     return pair_pts, new_ins_pts
 
 #visualization for checking
@@ -278,39 +262,30 @@ def randome_deviation(rseed, rd_range, td_range):
     return randr, randt
 
 def reverse_camerapose(c_rt, c_t, op_rt, op_t, mean):
-    origin = np.array([0, 0, 0, 1]).T
-    X_o = np.array([1, 0, 0, 1]).T
-    Y_o = np.array([0, 1, 0, 1]).T
-    Z_o = np.array([0, 0, 1, 1]).T
     rtn = np.array(c_rt)
     tmprt = R.from_rotvec(rtn)
     rt_mat = tmprt.as_dcm()
-    inv_rt = np.linalg.inv(rt_mat)
+    # inv_rt = np.linalg.inv(rt_mat)
     t = np.array(c_t)
     cor_mtx = np.zeros((4, 4), dtype='float32')
     cor_mtx[0:3, 0:3] = rt_mat
     cor_mtx[0:3, 3] = t.T
     cor_mtx[3, 3] = 1
     # print cor_mtx
-    inv_cormtx = np.linalg.inv(cor_mtx)
+    # inv_cormtx = np.linalg.inv(cor_mtx)
 
     # Crt = np.array(op_rt)
     # Ct = np.array(t_row.r)
     tmpr = R.from_rotvec(op_rt)
     r_mat = tmpr.as_dcm()
-    inv_r = np.linalg.inv(r_mat)
+    # inv_r = np.linalg.inv(r_mat)
+    o_mtx = np.zeros((4, 4), dtype='float32')
+    o_mtx[0:3, 0:3] = np.linalg.inv(r_mat)
+    o_mtx[0:3, 3] = (mean - r_mat.dot(mean) + op_t).T
+    o_mtx[3, 3] = 1
 
-    new_O = inv_r.dot(inv_cormtx.dot(origin)[0:3] - mean) + mean - op_t
-    new_X = inv_r.dot(inv_cormtx.dot(X_o)[0:3] - mean) + mean - op_t
-    new_Y = inv_r.dot(inv_cormtx.dot(Y_o)[0:3] - mean) + mean - op_t
-    new_Z = inv_r.dot(inv_cormtx.dot(Z_o)[0:3] - mean) + mean - op_t
-
-    new_Mat = np.array([[new_X[0] - new_O[0], new_Y[0] - new_O[0], new_Z[0] - new_O[0], new_O[0]],
-                        [new_X[1] - new_O[1], new_Y[1] - new_O[1], new_Z[1] - new_O[1], new_O[1]],
-                        [new_X[2] - new_O[2], new_Y[2] - new_O[2], new_Z[2] - new_O[2], new_O[2]],
-                        [0, 0, 0, 1]])
-    new_RT = np.linalg.inv(new_Mat)
-    print new_Mat, new_RT
+    new_RT = cor_mtx.dot(o_mtx)
+    # print new_RT
 
     rc_mat = new_RT[0:3, 0:3]
     tmprt = R.from_dcm(rc_mat)
@@ -346,12 +321,10 @@ if __name__ == '__main__':
     # t_row = ch.zeros(3)
     # R_row = ch.array([0, 0, 0.06])
     # t_row = ch.array([0, 0.06, 0])
-    R_row = ch.array([0, 0, 0.04])
-    t_row = ch.array([0, 0.04, 0])
 
     #random deviation
     for i in range(numTooth):
-        tmprd, tmptd = randome_deviation(i*i, 18, 0.06)
+        tmprd, tmptd = randome_deviation(i*(time.time()), 18, 0.04)
         teeth_row_mesh.rotate(tmprd, i)
         teeth_row_mesh.translate(tmptd, i)
 
@@ -572,7 +545,6 @@ if __name__ == '__main__':
     # rn5.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
     # rn5.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
 
-
     observed1 = load_image(img1_file_path)
     observed2 = load_image(img2_file_path)
     observed3 = load_image(img3_file_path)
@@ -594,302 +566,371 @@ if __name__ == '__main__':
     start_time = time.time()
     total_time = 0
 
-    # #Camera pose calibration
-    # rn_contours = []
-    # rn_contours.append(rn)
-    # rn_contours.append(rn2)
-    # rn_contours.append(rn3)
-    # rn_contours.append(rn4)
-    # rn_rs = []
-    # rn_rs.append(rt1)
-    # rn_rs.append(rt2)
-    # rn_rs.append(rt3)
-    # rn_rs.append(rt4)
-    # rn_ts = []
-    # rn_ts.append(t1)
-    # rn_ts.append(t2)
-    # rn_ts.append(t3)
-    # rn_ts.append(t4)
-    # obs = []
-    # obs.append(observed1)
-    # obs.append(observed2)
-    # obs.append(observed3)
-    # obs.append(observed4)
-    # for i in range(4):
-    #     err = 100000
-    #     err_dif = 100
-    #     iter = 0
-    #     while not(err < 10 or err_dif < 1 or iter > 20):
-    #         mean = np.mean(V_row.r, axis=0)
-    #         sample_pts = get_sample_pts(rn_contours[i].r)
-    #         intersection_pts, index_ray, index_tri = pj.back_projection(sample_pts, rn_rs[i], rn_ts[i], V_row, row_mesh.f)
-    #         pair_pts = get_pair_pts(obs[i], sample_pts, index_ray)
-    #
-    #         pars = Parameters()
-    #         pars.add('rtx', value=0)
-    #         pars.add('rty', value=0)
-    #         pars.add('rtz', value=0)
-    #         pars.add('tx', value=0)
-    #         pars.add('ty', value=0)
-    #         pars.add('tz', value=0)
-    #         out = lmfit.minimize(residual_rtt, pars, args=(mean, intersection_pts, rn_rs[i], rn_ts[i], pair_pts), method='leastsq')
-    #
-    #         err_dif = err - out.chisqr
-    #         if (err_dif > 0):
-    #             err = out.chisqr
-    #             # out.params.pretty_print()
-    #             tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
-    #             tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
-    #             print tmprt, tmpt
-    #             Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
-    #             V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
-    #             # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
-    #
-    #         print out.message, out.chisqr
+    #package the info
+    rn_contours = []
+    rn_contours.append(rn)
+    rn_contours.append(rn2)
+    rn_contours.append(rn3)
+    rn_contours.append(rn4)
+    rn_depths = []
+    rn_depths.append(drn)
+    rn_depths.append(drn2)
+    rn_depths.append(drn3)
+    rn_depths.append(drn4)
+    rn_rs = []
+    rn_rs.append(rt1)
+    rn_rs.append(rt2)
+    rn_rs.append(rt3)
+    rn_rs.append(rt4)
+    rn_ts = []
+    rn_ts.append(t1)
+    rn_ts.append(t2)
+    rn_ts.append(t3)
+    rn_ts.append(t4)
+    obs = []
+    obs.append(observed1)
+    obs.append(observed2)
+    obs.append(observed3)
+    obs.append(observed4)
+    cb_err = [100000, 100000, 100000, 100000]
+    for iter in range(3):
+        # Camera pose calibration
+        for i in range(4):
+            err = 100000
+            err_dif = 100
+            iter = 0
+            mean = np.mean(V_row.r, axis=0)
+            while not(err < 10 or err_dif < 1 or iter > 20):
+                sample_pts = get_sample_pts(rn_contours[i].r)
+                # intersection_pts, index_ray, index_tri = pj.back_projection(sample_pts, rn_rs[i], rn_ts[i], V_row, row_mesh.f)
+                # pair_pts = get_pair_pts(obs[i], sample_pts, index_ray)
+                sp_ins_pts = pj.back_projection_depth(sample_pts, rn_rs[i], rn_ts[i], rn_depths[i].r)
+                pair_pts, trim_ins_pts = get_pair_pts(obs[i], sample_pts, sp_ins_pts)  # get pairing points
 
-    #individual tooth pose estimation
-    for i in range(numTooth):
-        err = 100000
-        err_dif = 100
-        iter = 0
-        # print V_row.shape
-        # cur_tooth = V_row[teeth_row_mesh.start_idx_list[i]:teeth_row_mesh.start_idx_list[i+1], 0:3]
-        # print cur_tooth.shape
-        while not(err < 10 or err_dif < 1 or iter > 20):
-            mean = np.mean(Vi_list[i].r, axis=0)
-            # print mean
-            curs_time = time.time()
-            sample_pts1 = get_sample_pts(rn.r, crn.r, i) #first time using intial rn
-            print('sample point time: %s s' % (time.time() - curs_time))
-            cur_time = time.time()
-            if len(sample_pts1) < 2:
-                pair_pts1 = []
-                trim_ins_pts1 = []
-            else:
-                # get back projection 3D verts and id of 2D points which can find corresponding verts
-                sp_ins_pts1 = pj.back_projection_depth(sample_pts1, rt1, t1, drn.r)
-                print('back projection time: %s s' % (time.time() - cur_time))
-                if iter == 0:
-                    Mesh.save_to_obj('result/tooth{}_vertices.obj'.format(i), sp_ins_pts1)
+                pars = Parameters()
+                pars.add('rtx', value=0)
+                pars.add('rty', value=0)
+                pars.add('rtz', value=0)
+                pars.add('tx', value=0)
+                pars.add('ty', value=0)
+                pars.add('tz', value=0)
+                out = lmfit.minimize(residual_rtt, pars, args=(mean, trim_ins_pts, rn_rs[i], rn_ts[i], pair_pts), method='leastsq')
+
+                err_dif = cb_err[i] - out.chisqr
+                # cb_err[i] = out.chisqr
+                if (err_dif > 0):
+                    err = out.chisqr
+                    cb_err[i] = out.chisqr
+                    # out.params.pretty_print()
+                    tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
+                    tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
+                    # print tmprt, tmpt
+
+                    tc_rt, tc_t = reverse_camerapose(rn_rs[i], rn_ts[i], tmprt, tmpt, mean)
+                    rn_rs[i] = ch.array(tc_rt)
+                    rn_ts[i] = ch.array(tc_t)
+                    rn_contours[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([w, w]) / 2.,
+                                                        c=ch.array([w, h]) / 2.,
+                                                        k=ch.zeros(5))
+                    rn_depths[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([w, w]) / 2.,
+                                                    c=ch.array([w, h]) / 2.,
+                                                    k=ch.zeros(5))
+
+                print out.message, out.chisqr
+
+
+            print("View: %d error: %f --- %s seconds ---" % (i, cb_err[i], time.time() - start_time))
+            total_time += (time.time() - start_time)
+            start_time = time.time()
+
+        rt1 = rn_rs[0]
+        t1 = rn_ts[0]
+        rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                  c=ch.array([w, h]) / 2.,
+                                  k=ch.zeros(5))
+        drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        rt2 = rn_rs[1]
+        t2 = rn_ts[1]
+        rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                  c=ch.array([w, h]) / 2.,
+                                  k=ch.zeros(5))
+        drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        rt3 = rn_rs[2]
+        t3 = rn_ts[2]
+        rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+        crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+        rt4 = rn_rs[3]
+        t4 = rn_ts[3]
+        rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+        crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+
+        #individual tooth pose estimation
+        for i in range(numTooth):
+            err = 100000
+            err_dif = 100
+            iter = 0
+            # print V_row.shape
+            # cur_tooth = V_row[teeth_row_mesh.start_idx_list[i]:teeth_row_mesh.start_idx_list[i+1], 0:3]
+            # print cur_tooth.shape
+            while not(err < 10 or err_dif < 1 or iter > 20):
+                mean = np.mean(Vi_list[i].r, axis=0)
+                # print mean
+                curs_time = time.time()
+                sample_pts1 = get_sample_pts(rn.r, crn.r, i) #first time using intial rn
+                print('sample point time: %s s' % (time.time() - curs_time))
                 cur_time = time.time()
-                pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1)  # get pairing points
-                print('pairing time: %s s' % (time.time() - cur_time))
+                if len(sample_pts1) < 2:
+                    pair_pts1 = []
+                    trim_ins_pts1 = []
+                else:
+                    # get back projection 3D verts and id of 2D points which can find corresponding verts
+                    sp_ins_pts1 = pj.back_projection_depth(sample_pts1, rt1, t1, drn.r)
+                    print('back projection time: %s s' % (time.time() - cur_time))
+                    # if iter == 0:
+                    #     Mesh.save_to_obj('result/tooth{}_vertices.obj'.format(i), sp_ins_pts1)
+                    cur_time = time.time()
+                    pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1)  # get pairing points
+                    print('pairing time: %s s' % (time.time() - cur_time))
 
-            # intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
-            # get separate tooth's corresponding verts and pair points
-            # sp_ins_pts1 = []
-            # sp_index_ray1 = []
-            # cc = 0
-            # for j in range(index_tri1.size):
-            #     if teeth_row_mesh.faces_num[i] <= index_tri1[j] and index_tri1[j] < teeth_row_mesh.faces_num[i+1]:
-            #         sp_ins_pts1.append(intersection_pts1[j])
-            #         sp_index_ray1.append(index_ray1[j])
-            #         cc += 1
-            # if cc < 2:
-            #     pair_pts1 = []
-            # else:
-            #     sp_ins_pts1 = np.vstack(sp_ins_pts1)
-            #     sp_index_ray1 = np.squeeze(sp_index_ray1)
-            #     pair_pts1 = get_pair_pts(observed1, sample_pts1, sp_index_ray1) #find pair points (only those getting 3D verts)
-
-
-            sample_pts2 = get_sample_pts(rn2.r, crn2.r, i)
-            if len(sample_pts2) < 2:
-                pair_pts2 = []
-                trim_ins_pts2 = []
-            else:
-                sp_ins_pts2 = pj.back_projection_depth(sample_pts2, rt2, t2, drn2.r)
-                pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
-
-            # intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
-            # sp_ins_pts2 = []
-            # sp_index_ray2 = []
-            # cc = 0
-            # for j in range(index_tri2.size):
-            #     if teeth_row_mesh.faces_num[i] <= index_tri2[j] and index_tri2[j] < teeth_row_mesh.faces_num[i + 1]:
-            #         sp_ins_pts2.append(intersection_pts2[j])
-            #         sp_index_ray2.append(index_ray2[j])
-            #         cc += 1
-            # if cc < 2:
-            #     pair_pts2 = []
-            # else:
-            #     sp_ins_pts2 = np.vstack(sp_ins_pts2)
-            #     sp_index_ray2 = np.squeeze(sp_index_ray2)
-            #     pair_pts2 = get_pair_pts(observed2, sample_pts2, sp_index_ray2)
+                # intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
+                # get separate tooth's corresponding verts and pair points
+                # sp_ins_pts1 = []
+                # sp_index_ray1 = []
+                # cc = 0
+                # for j in range(index_tri1.size):
+                #     if teeth_row_mesh.faces_num[i] <= index_tri1[j] and index_tri1[j] < teeth_row_mesh.faces_num[i+1]:
+                #         sp_ins_pts1.append(intersection_pts1[j])
+                #         sp_index_ray1.append(index_ray1[j])
+                #         cc += 1
+                # if cc < 2:
+                #     pair_pts1 = []
+                # else:
+                #     sp_ins_pts1 = np.vstack(sp_ins_pts1)
+                #     sp_index_ray1 = np.squeeze(sp_index_ray1)
+                #     pair_pts1 = get_pair_pts(observed1, sample_pts1, sp_index_ray1) #find pair points (only those getting 3D verts)
 
 
-            sample_pts3 = get_sample_pts(rn3.r, crn3.r, i)
-            if len(sample_pts3) < 2:
-                pair_pts3 = []
-                trim_ins_pts3 = []
-            else:
-                sp_ins_pts3 = pj.back_projection_depth(sample_pts3, rt3, t3, drn3.r)
-                pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
+                sample_pts2 = get_sample_pts(rn2.r, crn2.r, i)
+                if len(sample_pts2) < 2:
+                    pair_pts2 = []
+                    trim_ins_pts2 = []
+                else:
+                    sp_ins_pts2 = pj.back_projection_depth(sample_pts2, rt2, t2, drn2.r)
+                    pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
 
-            # intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
-            # sp_ins_pts3 = []
-            # sp_index_ray3 = []
-            # cc = 0
-            # for j in range(index_tri3.size):
-            #     if teeth_row_mesh.faces_num[i] <= index_tri3[j] and index_tri3[j] < teeth_row_mesh.faces_num[i + 1]:
-            #         sp_ins_pts3.append(intersection_pts3[j])
-            #         sp_index_ray3.append(index_ray3[j])
-            #         cc += 1
-            # if cc < 2:
-            #     pair_pts3 = []
-            # else:
-            #     sp_ins_pts3 = np.vstack(sp_ins_pts3)
-            #     sp_index_ray3 = np.squeeze(sp_index_ray3)
-            #     pair_pts3 = get_pair_pts(observed3, sample_pts3, sp_index_ray3)
-
-            sample_pts4 = get_sample_pts(rn4.r, crn4.r, i)
-            if len(sample_pts4) < 2:
-                pair_pts4 = []
-                trim_ins_pts4 = []
-            else:
-                sp_ins_pts4 = pj.back_projection_depth(sample_pts4, rt4, t4, drn4.r)
-                pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
-
-            # intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
-            # sp_ins_pts4 = []
-            # sp_index_ray4 = []
-            # cc = 0
-            # for j in range(index_tri4.size):
-            #     if teeth_row_mesh.faces_num[i] <= index_tri4[j] and index_tri4[j] < teeth_row_mesh.faces_num[i + 1]:
-            #         sp_ins_pts4.append(intersection_pts4[j])
-            #         sp_index_ray4.append(index_ray4[j])
-            #         cc += 1
-            # if cc <2:
-            #     pair_pts4 = []
-            # else:
-            #     # print cc
-            #     sp_ins_pts4 = np.vstack(sp_ins_pts4)
-            #     sp_index_ray4 = np.squeeze(sp_index_ray4)
-            #     # print sp_index_ray4.shape
-            #     pair_pts4 = get_pair_pts(observed4, sample_pts4, sp_index_ray4)
+                # intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
+                # sp_ins_pts2 = []
+                # sp_index_ray2 = []
+                # cc = 0
+                # for j in range(index_tri2.size):
+                #     if teeth_row_mesh.faces_num[i] <= index_tri2[j] and index_tri2[j] < teeth_row_mesh.faces_num[i + 1]:
+                #         sp_ins_pts2.append(intersection_pts2[j])
+                #         sp_index_ray2.append(index_ray2[j])
+                #         cc += 1
+                # if cc < 2:
+                #     pair_pts2 = []
+                # else:
+                #     sp_ins_pts2 = np.vstack(sp_ins_pts2)
+                #     sp_index_ray2 = np.squeeze(sp_index_ray2)
+                #     pair_pts2 = get_pair_pts(observed2, sample_pts2, sp_index_ray2)
 
 
-            cur_time = time.time()
+                sample_pts3 = get_sample_pts(rn3.r, crn3.r, i)
+                if len(sample_pts3) < 2:
+                    pair_pts3 = []
+                    trim_ins_pts3 = []
+                else:
+                    sp_ins_pts3 = pj.back_projection_depth(sample_pts3, rt3, t3, drn3.r)
+                    pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
 
-            # pars = np.array([0, 0, 0, 0, 0, 0], dtype='float32')
-            pars = Parameters()
-            pars.add('rtx', value=0)
-            pars.add('rty', value=0)
-            pars.add('rtz', value=0)
-            pars.add('tx', value=0)
-            pars.add('ty', value=0)
-            pars.add('tz', value=0)
-            out = lmfit.minimize(residual_rtt_allview, pars,
-                                args=(mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
-                                method='leastsq')
-            print('optimization time: %s s' % (time.time() - cur_time))
-            cur_time = time.time()
-            err_dif = err - out.chisqr
-            if (err_dif > 0):
-                err = out.chisqr
-                # out.params.pretty_print()
-                tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
-                tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
-                print tmprt, tmpt
+                # intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
+                # sp_ins_pts3 = []
+                # sp_index_ray3 = []
+                # cc = 0
+                # for j in range(index_tri3.size):
+                #     if teeth_row_mesh.faces_num[i] <= index_tri3[j] and index_tri3[j] < teeth_row_mesh.faces_num[i + 1]:
+                #         sp_ins_pts3.append(intersection_pts3[j])
+                #         sp_index_ray3.append(index_ray3[j])
+                #         cc += 1
+                # if cc < 2:
+                #     pair_pts3 = []
+                # else:
+                #     sp_ins_pts3 = np.vstack(sp_ins_pts3)
+                #     sp_index_ray3 = np.squeeze(sp_index_ray3)
+                #     pair_pts3 = get_pair_pts(observed3, sample_pts3, sp_index_ray3)
+
+                sample_pts4 = get_sample_pts(rn4.r, crn4.r, i)
+                if len(sample_pts4) < 2:
+                    pair_pts4 = []
+                    trim_ins_pts4 = []
+                else:
+                    sp_ins_pts4 = pj.back_projection_depth(sample_pts4, rt4, t4, drn4.r)
+                    pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
+
+                # intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
+                # sp_ins_pts4 = []
+                # sp_index_ray4 = []
+                # cc = 0
+                # for j in range(index_tri4.size):
+                #     if teeth_row_mesh.faces_num[i] <= index_tri4[j] and index_tri4[j] < teeth_row_mesh.faces_num[i + 1]:
+                #         sp_ins_pts4.append(intersection_pts4[j])
+                #         sp_index_ray4.append(index_ray4[j])
+                #         cc += 1
+                # if cc <2:
+                #     pair_pts4 = []
+                # else:
+                #     # print cc
+                #     sp_ins_pts4 = np.vstack(sp_ins_pts4)
+                #     sp_index_ray4 = np.squeeze(sp_index_ray4)
+                #     # print sp_index_ray4.shape
+                #     pair_pts4 = get_pair_pts(observed4, sample_pts4, sp_index_ray4)
+
+
+                cur_time = time.time()
+
+                # pars = np.array([0, 0, 0, 0, 0, 0], dtype='float32')
+                pars = Parameters()
+                pars.add('rtx', value=0)
+                pars.add('rty', value=0)
+                pars.add('rtz', value=0)
+                pars.add('tx', value=0)
+                pars.add('ty', value=0)
+                pars.add('tz', value=0)
+                out = lmfit.minimize(residual_rtt_allview, pars,
+                                    args=(mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
+                                    method='leastsq')
+                print('optimization time: %s s' % (time.time() - cur_time))
+                cur_time = time.time()
+                err_dif = err - out.chisqr
+                if (err_dif > 0):
+                    err = out.chisqr
+                    # out.params.pretty_print()
+                    tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
+                    tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
+                    print tmprt, tmpt
 
 
 
 
 
-                Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
-                V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
-                # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
+                    Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
+                    V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
+                    # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
 
-            print out.message, out.chisqr
+                print out.message, out.chisqr
 
-            #reproject 2D contour
-            rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-            rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-            rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-            rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-            drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
-                                      c=ch.array([w, h]) / 2.,
-                                      k=ch.zeros(5))
-            drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
-                                       c=ch.array([w, h]) / 2.,
-                                       k=ch.zeros(5))
-            drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
-                                       c=ch.array([w, h]) / 2.,
-                                       k=ch.zeros(5))
-            drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
-                                       c=ch.array([w, h]) / 2.,
-                                       k=ch.zeros(5))
-            crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
-                                       c=ch.array([w, h]) / 2.,
-                                       k=ch.zeros(5))
-            crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                #reproject 2D contour
+                rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-            crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-            crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-            print('rerendering time: %s s' % (time.time() - cur_time))
-            if (iter == 0):
-                print('one step time: %s s' % (time.time() - curs_time))
-            # Mesh.save_to_obj('result/V_row_op.obj', V_row, row_mesh.f)
-            # rn_c2 = deepcopy(rn.r)
-            # rn_c2[rn_c2[:, :, 0] > 0] *= [0, 1, 0]
-            #
-            # plt.imshow(rn_c2 + rn_c)
-            # plt.show()
-            # break
-            iter += 1
+                rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                        c=ch.array([w, h]) / 2.,
+                                        k=ch.zeros(5))
+                drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                          c=ch.array([w, h]) / 2.,
+                                          k=ch.zeros(5))
+                drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                                            c=ch.array([w, h]) / 2.,
+                                            k=ch.zeros(5))
+                crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                                            c=ch.array([w, h]) / 2.,
+                                            k=ch.zeros(5))
+                crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                                            c=ch.array([w, h]) / 2.,
+                                            k=ch.zeros(5))
+                print('rerendering time: %s s' % (time.time() - cur_time))
+                if (iter == 0):
+                    print('one step time: %s s' % (time.time() - curs_time))
+                # Mesh.save_to_obj('result/V_row_op.obj', V_row, row_mesh.f)
+                # rn_c2 = deepcopy(rn.r)
+                # rn_c2[rn_c2[:, :, 0] > 0] *= [0, 1, 0]
+                #
+                # plt.imshow(rn_c2 + rn_c)
+                # plt.show()
+                # break
+                iter += 1
 
-        # draw contours of different views
-        if axarr is None:
-            fig, axarr = plt.subplots(2, 2, sharex='col', sharey='row', gridspec_kw={'wspace': 0, 'hspace': 0})
-            # fig.subplots_adjust(hspace=0, wspace=0)
-        fig.patch.set_facecolor('grey')
+            # draw contours of different views
+            if axarr is None:
+                fig, axarr = plt.subplots(2, 2, sharex='col', sharey='row', gridspec_kw={'wspace': 0, 'hspace': 0})
+                # fig.subplots_adjust(hspace=0, wspace=0)
+            fig.patch.set_facecolor('grey')
 
-        rn1_dc = deepcopy(rn.r)
-        rn2_dc = deepcopy(rn2.r)
-        rn3_dc = deepcopy(rn3.r)
-        rn4_dc = deepcopy(rn4.r)
+            rn1_dc = deepcopy(rn.r)
+            rn2_dc = deepcopy(rn2.r)
+            rn3_dc = deepcopy(rn3.r)
+            rn4_dc = deepcopy(rn4.r)
 
-        rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
-        rn2_dc[rn2_dc[:, :, 0] > 0] *= [1, 0, 0]
-        rn3_dc[rn3_dc[:, :, 0] > 0] *= [1, 0, 0]
-        rn4_dc[rn4_dc[:, :, 0] > 0] *= [1, 0, 0]
+            rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
+            rn2_dc[rn2_dc[:, :, 0] > 0] *= [1, 0, 0]
+            rn3_dc[rn3_dc[:, :, 0] > 0] *= [1, 0, 0]
+            rn4_dc[rn4_dc[:, :, 0] > 0] *= [1, 0, 0]
 
-        axarr[0, 0].imshow(rn1_dc + ob1_dc)
-        axarr[0, 1].imshow(rn2_dc + ob2_dc)
-        axarr[1, 0].imshow(rn3_dc + ob3_dc)
-        axarr[1, 1].imshow(rn4_dc + ob4_dc)
+            axarr[0, 0].imshow(rn1_dc + ob1_dc)
+            axarr[0, 1].imshow(rn2_dc + ob2_dc)
+            axarr[1, 0].imshow(rn3_dc + ob3_dc)
+            axarr[1, 1].imshow(rn4_dc + ob4_dc)
 
-        scipy.misc.imsave('result/log/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
-        scipy.misc.imsave('result/log/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
-        scipy.misc.imsave('result/log/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
-        scipy.misc.imsave('result/log/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
-        scipy.misc.imsave('result/log/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
-        scipy.misc.imsave('result/log/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
-        scipy.misc.imsave('result/log/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
-        scipy.misc.imsave('result/log/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
-        scipy.misc.imsave('result/log/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
-        scipy.misc.imsave('result/log/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
-        scipy.misc.imsave('result/log/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
-        scipy.misc.imsave('result/log/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
+            scipy.misc.imsave('result/log/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
+            scipy.misc.imsave('result/log/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
+            scipy.misc.imsave('result/log/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
+            scipy.misc.imsave('result/log/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
+            scipy.misc.imsave('result/log/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
+            scipy.misc.imsave('result/log/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
+            scipy.misc.imsave('result/log/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
+            scipy.misc.imsave('result/log/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
+            scipy.misc.imsave('result/log/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
+            scipy.misc.imsave('result/log/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
+            scipy.misc.imsave('result/log/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
+            scipy.misc.imsave('result/log/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
 
-        print("tooth id: %d error: %f --- %s seconds ---" % (i, err, time.time() - start_time))
-        total_time += (time.time() - start_time)
-        start_time = time.time()
+            print("tooth id: %d error: %f --- %s seconds ---" % (i, err, time.time() - start_time))
+            total_time += (time.time() - start_time)
+            start_time = time.time()
 
-        plt.pause(5)
+            plt.pause(5)
 
     print("total time --- %s seconds ---" % (total_time))
     Mesh.save_to_obj('result/V_row_opm.obj', V_row, row_mesh.f)
