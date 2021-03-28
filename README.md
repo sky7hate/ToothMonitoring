@@ -22,5 +22,8 @@ python FitContour.py --t_model teeth_model_folder --view1 ground_truth_contour_f
                      (Optional: use --rt1 --t1 --rt2 --t2 --rt3 --t3 --rt4 --t4 to set the camera pose)
                      
 example:
-python FitContour.py --t_model /home/jiaming/MultiviewFitting/data/upper_segmented/HBF_12681/before/ --view1 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc1.jpg --view2 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc2.jpg --view3 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc3.jpg --view4 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc4.jpg --camera_pose camera_pose.txt 
+python FitContour.py --t_model /home/jiaming/MultiviewFitting/data/upper_segmented/HBF_12681/before/ 
+                     --view1 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc1.jpg --view2 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc2.jpg 
+                     --view3 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc3.jpg --view4 /home/jiaming/MultiviewFitting/data/observation/12681/real_rc4.jpg 
+                     --camera_pose camera_pose.txt 
 ```
