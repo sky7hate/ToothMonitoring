@@ -25,6 +25,7 @@ from scipy.spatial.transform import Rotation as R
 import cv2
 from config import cfg
 import os
+import argparse
 
 def get_sample_pts(contour, colormap = None, t_id = None):
     #decrease the size
@@ -293,25 +294,105 @@ def reverse_camerapose(c_rt, c_t, op_rt, op_t, mean):
     new_ct = new_RT[0:3, 3].T
     return new_crt, new_ct
 
+def parsing_camera_pose(file_camera):
+    file = open(file_camera, 'r')
+    lines = file.readlines()
+    cc = 0
+    cpose = []
+    for line in lines:
+        if cc == 0:
+            pf = float(line) / 52 * 640
+            cc +=1
+            continue
+        tmp = line.split(', ')
+        cpose.append([float(tmp[0]), float(tmp[1]), float(tmp[2])])
+    prt1 = ch.array(cpose[0])
+    pt1 = ch.array(cpose[1])
+    prt2 = ch.array(cpose[2])
+    pt2 = ch.array(cpose[3])
+    prt3 = ch.array(cpose[4])
+    pt3 = ch.array(cpose[5])
+    prt4 = ch.array(cpose[6])
+    pt4 = ch.array(cpose[7])
+    return prt1, pt1, prt2, pt2, prt3, pt3, prt4, pt4, pf
+
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--t_model", help="tooth model file folder")
+    parser.add_argument("--view1", help="view1 ground truth contour file")
+    parser.add_argument("--view2", help="view2 ground truth contour file")
+    parser.add_argument("--view3", help="view3 ground truth contour file")
+    parser.add_argument("--view4", help="view4 ground truth contour file")
+    parser.add_argument("--camera_pose", help="camera pose parameters file")
+    parser.add_argument("--rt1", nargs=3, type=float, help="view1 camera pose rotation pars")
+    parser.add_argument("--t1", nargs=3, type=float, help="view1 camera pose translation pars")
+    parser.add_argument("--rt2", nargs=3, type=float, help="view2 camera pose rotation pars")
+    parser.add_argument("--t2", nargs=3, type=float, help="view2 camera pose translation pars")
+    parser.add_argument("--rt3", nargs=3, type=float, help="view3 camera pose rotation pars")
+    parser.add_argument("--t3", nargs=3, type=float, help="view3 camera pose translation pars")
+    parser.add_argument("--rt4", nargs=3, type=float, help="view4 camera pose rotation pars")
+    parser.add_argument("--t4", nargs=3, type=float, help="view4 camera pose translation pars")
+    parser.add_argument("--f", type=float, help="focal length")
+    args = parser.parse_args()
 
+
+    ### default value ####
     teeth_file_folder = '/home/jiaming/MultiviewFitting/data/upper_segmented/HBF_12681/before'
     # teeth_file_folder = 'data/from GuMin/seg/model_0'
-    moved_mesh_folder = '/home/jiaming/MultiviewFitting/data/observation/12681/movedRow_real1.obj'
+    # moved_mesh_folder = '/home/jiaming/MultiviewFitting/data/observation/12681/movedRow_real1.obj'
     img1_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc1.jpg'
     img2_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc2.jpg'
     img3_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc3.jpg'
     img4_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc4.jpg'
-    # img5_file_path = 'data/observation/contour_4.jpg'
-    
+    rt1 = ch.array([0, -0.3, 0]) * np.pi / 2
+    t1 = ch.array([1.2, 0.2, 0])
+    rt2 = ch.array([0.08, 0, 0]) * np.pi / 2
+    t2 = ch.array([-0.05, 0.2, -0.25])
+    rt3 = ch.array([-0.9, 0, 0]) * np.pi / 3
+    t3 = ch.array([0, -1.5, 0.2])
+    rt4 = ch.array([0.1, 0.4, 0]) * np.pi / 2
+    t4 = ch.array([-1.4, 0.3, 0.2])
+    f = 320
+
+    #parsing the input arguments
+    if args.t_model is not None:
+        teeth_file_folder = args.t_model
+    if args.view1 is not None:
+        img1_file_path = args.view1
+    if args.view2 is not None:
+        img2_file_path = args.view2
+    if args.view3 is not None:
+        img3_file_path = args.view3
+    if args.view4 is not None:
+        img4_file_path = args.view4
+    if args.camera_pose is not None:
+        rt1, t1, rt2, t2, rt3, t3, rt4, t4, f = parsing_camera_pose(args.camera_pose)
+    else:
+        if args.rt1 is not None:
+            rt1 = ch.array(args.rt1)
+        if args.t1 is not None:
+            t1 = ch.array(args.t1)
+        if args.rt2 is not None:
+            rt2 = ch.array(args.rt2)
+        if args.t2 is not None:
+            t2 = ch.array(args.t2)
+        if args.rt3 is not None:
+            rt3 = ch.array(args.rt3)
+        if args.t3 is not None:
+            t3 = ch.array(args.t3)
+        if args.rt4 is not None:
+            rt4 = ch.array(args.rt4)
+        if args.t4 is not None:
+            t4 = ch.array(args.t4)
+
 
     print(teeth_file_folder)
 
     teeth_row_mesh = Mesh.TeethRowMesh(teeth_file_folder, False)
     row_mesh = teeth_row_mesh.row_mesh
 
-    moved_mesh = Mesh.TeethRowMesh(moved_mesh_folder, True)
+    # moved_mesh = Mesh.TeethRowMesh(moved_mesh_folder, True)
     # t0 = ch.asarray(teeth_row_mesh.positions_in_row)
 
     numTooth = len(teeth_row_mesh.mesh_list)
@@ -364,15 +445,14 @@ if __name__ == '__main__':
     #                                c=ch.array([w, h]) / 2.,
     #                                k=ch.zeros(5))
     #12681
-    rt1 = ch.array([0, -0.3, 0]) * np.pi/2
-    t1 = ch.array([1.2, 0.2, 0])
-    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+
+    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-    drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+    drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
-    crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+    crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
 
@@ -409,15 +489,14 @@ if __name__ == '__main__':
     #                                c=ch.array([w, h]) / 2.,
     #                                k=ch.zeros(5))
     #12681
-    rt2 = ch.array([0.08, 0, 0]) * np.pi / 2
-    t2 = ch.array([-0.05, 0.2, -0.25])
-    rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+
+    rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-    drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+    drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
-    crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+    crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -454,15 +533,14 @@ if __name__ == '__main__':
     #                           c=ch.array([w, h]) / 2.,
     #                           k=ch.zeros(5))
     #12681
-    rt3 = ch.array([-0.9, 0, 0]) * np.pi / 3
-    t3 = ch.array([0, -1.5, 0.2])
-    rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+
+    rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
-    drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+    drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
-    crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+    crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -500,15 +578,14 @@ if __name__ == '__main__':
     #                                c=ch.array([w, h]) / 2.,
     #                                k=ch.zeros(5))
     #12681
-    rt4 = ch.array([0.1, 0.4, 0]) * np.pi/2
-    t4 = ch.array([-1.4, 0.3, 0.2])
-    rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+
+    rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-    drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+    drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
-    crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+    crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -567,26 +644,6 @@ if __name__ == '__main__':
     total_time = 0
 
     #package the info
-    rn_contours = []
-    rn_contours.append(rn)
-    rn_contours.append(rn2)
-    rn_contours.append(rn3)
-    rn_contours.append(rn4)
-    rn_depths = []
-    rn_depths.append(drn)
-    rn_depths.append(drn2)
-    rn_depths.append(drn3)
-    rn_depths.append(drn4)
-    rn_rs = []
-    rn_rs.append(rt1)
-    rn_rs.append(rt2)
-    rn_rs.append(rt3)
-    rn_rs.append(rt4)
-    rn_ts = []
-    rn_ts.append(t1)
-    rn_ts.append(t2)
-    rn_ts.append(t3)
-    rn_ts.append(t4)
     obs = []
     obs.append(observed1)
     obs.append(observed2)
@@ -594,6 +651,26 @@ if __name__ == '__main__':
     obs.append(observed4)
     cb_err = [100000, 100000, 100000, 100000]
     for iter in range(3):
+        rn_contours = []
+        rn_contours.append(rn)
+        rn_contours.append(rn2)
+        rn_contours.append(rn3)
+        rn_contours.append(rn4)
+        rn_depths = []
+        rn_depths.append(drn)
+        rn_depths.append(drn2)
+        rn_depths.append(drn3)
+        rn_depths.append(drn4)
+        rn_rs = []
+        rn_rs.append(rt1)
+        rn_rs.append(rt2)
+        rn_rs.append(rt3)
+        rn_rs.append(rt4)
+        rn_ts = []
+        rn_ts.append(t1)
+        rn_ts.append(t2)
+        rn_ts.append(t3)
+        rn_ts.append(t4)
         # Camera pose calibration
         for i in range(4):
             err = 100000
@@ -629,10 +706,10 @@ if __name__ == '__main__':
                     tc_rt, tc_t = reverse_camerapose(rn_rs[i], rn_ts[i], tmprt, tmpt, mean)
                     rn_rs[i] = ch.array(tc_rt)
                     rn_ts[i] = ch.array(tc_t)
-                    rn_contours[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([w, w]) / 2.,
+                    rn_contours[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([f, f]),
                                                         c=ch.array([w, h]) / 2.,
                                                         k=ch.zeros(5))
-                    rn_depths[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([w, w]) / 2.,
+                    rn_depths[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([f, f]),
                                                     c=ch.array([w, h]) / 2.,
                                                     k=ch.zeros(5))
 
@@ -645,46 +722,46 @@ if __name__ == '__main__':
 
         rt1 = rn_rs[0]
         t1 = rn_ts[0]
-        rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+        rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                   c=ch.array([w, h]) / 2.,
                                   k=ch.zeros(5))
-        drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+        drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-        crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+        crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
         rt2 = rn_rs[1]
         t2 = rn_ts[1]
-        rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+        rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                   c=ch.array([w, h]) / 2.,
                                   k=ch.zeros(5))
-        drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+        drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-        crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+        crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
         rt3 = rn_rs[2]
         t3 = rn_ts[2]
-        rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+        rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-        drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+        drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                     c=ch.array([w, h]) / 2.,
                                     k=ch.zeros(5))
-        crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+        crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                     c=ch.array([w, h]) / 2.,
                                     k=ch.zeros(5))
         rt4 = rn_rs[3]
         t4 = rn_ts[3]
-        rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+        rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-        drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+        drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                     c=ch.array([w, h]) / 2.,
                                     k=ch.zeros(5))
-        crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+        crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                     c=ch.array([w, h]) / 2.,
                                     k=ch.zeros(5))
 
@@ -844,40 +921,40 @@ if __name__ == '__main__':
                 print out.message, out.chisqr
 
                 #reproject 2D contour
-                rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                           c=ch.array([w, h]) / 2.,
                                           k=ch.zeros(5))
-                drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                            c=ch.array([w, h]) / 2.,
                                            k=ch.zeros(5))
-                drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                            c=ch.array([w, h]) / 2.,
                                            k=ch.zeros(5))
-                drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                            c=ch.array([w, h]) / 2.,
                                            k=ch.zeros(5))
-                crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w]) / 2.,
+                crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                            c=ch.array([w, h]) / 2.,
                                            k=ch.zeros(5))
-                crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w]) / 2.,
+                crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                             c=ch.array([w, h]) / 2.,
                                             k=ch.zeros(5))
-                crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w]) / 2.,
+                crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                             c=ch.array([w, h]) / 2.,
                                             k=ch.zeros(5))
-                crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w]) / 2.,
+                crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                             c=ch.array([w, h]) / 2.,
                                             k=ch.zeros(5))
                 print('rerendering time: %s s' % (time.time() - cur_time))

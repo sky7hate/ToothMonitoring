@@ -4,7 +4,6 @@
     <list default="true" id="cabfd910-7879-4436-89a4-d88da8cb4041" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FitContour.py" beforeDir="false" afterPath="$PROJECT_DIR$/FitContour.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/Mesh.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -18,8 +17,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/FitContour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="209">
-              <caret line="258" column="29" lean-forward="true" selection-start-line="258" selection-start-column="29" selection-end-line="258" selection-end-column="29" />
+            <state relative-caret-position="447">
+              <caret line="1007" column="36" selection-start-line="1007" selection-start-column="36" selection-end-line="1007" selection-end-column="36" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -28,19 +27,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/chumpy/ch.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="8745">
-              <caret line="595" selection-start-line="595" selection-end-line="595" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1785">
-              <caret line="139" column="31" selection-start-line="139" selection-start-column="13" selection-end-line="139" selection-end-column="31" />
+            <state relative-caret-position="124">
+              <caret line="159" column="75" selection-start-line="159" selection-start-column="75" selection-end-line="159" selection-end-column="75" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -51,8 +41,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ImageTest.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="450">
-              <caret line="34" column="58" selection-start-line="34" selection-start-column="58" selection-end-line="34" selection-end-column="58" />
+            <state relative-caret-position="251">
+              <caret line="48" column="30" selection-start-line="48" selection-start-column="30" selection-end-line="48" selection-end-column="30" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -81,8 +71,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Projection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1365">
-              <caret line="114" column="24" selection-start-line="114" selection-start-column="24" selection-end-line="114" selection-end-column="24" />
+            <state relative-caret-position="870">
+              <caret line="81" column="24" selection-start-line="81" selection-start-column="24" selection-end-line="81" selection-end-column="24" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -124,18 +114,18 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/Projection.py" />
-        <option value="$PROJECT_DIR$/ImageTest.py" />
-        <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/Mesh.py" />
+        <option value="$PROJECT_DIR$/test.py" />
+        <option value="$PROJECT_DIR$/ImageTest.py" />
         <option value="$PROJECT_DIR$/FitContour.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="1920" />
-    <option name="y" value="31" />
+    <option name="x" value="545" />
+    <option name="y" value="117" />
     <option name="width" value="1280" />
-    <option name="height" value="657" />
+    <option name="height" value="845" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -143,7 +133,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -155,6 +144,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -173,7 +163,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.FitContour">
+  <component name="RunManager" selected="Python.test">
     <configuration name="FitContour" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="ToothMonitoring" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -260,8 +250,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.FitContour" />
         <item itemvalue="Python.test" />
+        <item itemvalue="Python.FitContour" />
         <item itemvalue="Python.ImageTest" />
         <item itemvalue="Python.Projection" />
       </list>
@@ -281,9 +271,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1920" y="31" width="1280" height="657" extended-state="0" />
+    <frame x="545" y="117" width="1280" height="845" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18268467" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18232484" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -430,40 +421,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/FitContour.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="209">
-          <caret line="258" column="29" lean-forward="true" selection-start-line="258" selection-start-column="29" selection-end-line="258" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/chumpy/ch.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="8745">
           <caret line="595" selection-start-line="595" selection-end-line="595" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1785">
-          <caret line="139" column="31" selection-start-line="139" selection-start-column="13" selection-end-line="139" selection-end-column="31" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ImageTest.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="34" column="58" selection-start-line="34" selection-start-column="58" selection-end-line="34" selection-end-column="58" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -483,8 +444,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Projection.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1365">
-          <caret line="114" column="24" selection-start-line="114" selection-start-column="24" selection-end-line="114" selection-end-column="24" />
+        <state relative-caret-position="870">
+          <caret line="81" column="24" selection-start-line="81" selection-start-column="24" selection-end-line="81" selection-end-column="24" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
@@ -497,6 +458,36 @@
           <caret line="76" column="21" selection-start-line="76" selection-start-column="21" selection-end-line="76" selection-end-column="21" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="124">
+          <caret line="159" column="75" selection-start-line="159" selection-start-column="75" selection-end-line="159" selection-end-column="75" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ImageTest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="251">
+          <caret line="48" column="30" selection-start-line="48" selection-start-column="30" selection-end-line="48" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FitContour.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="447">
+          <caret line="1007" column="36" selection-start-line="1007" selection-start-column="36" selection-end-line="1007" selection-end-column="36" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
