@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cabfd910-7879-4436-89a4-d88da8cb4041" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/AblationStudy.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FitContour.py" beforeDir="false" afterPath="$PROJECT_DIR$/FitContour.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,11 +14,23 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/FitContour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="447">
-              <caret line="1007" column="36" selection-start-line="1007" selection-start-column="36" selection-end-line="1007" selection-end-column="36" />
+            <state relative-caret-position="3120">
+              <caret line="961" column="70" selection-start-line="961" selection-start-column="70" selection-end-line="961" selection-end-column="70" />
+              <folding>
+                <element signature="e#0#11#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/AblationStudy.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="291">
+              <caret line="1072" selection-start-line="1072" selection-end-line="1072" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -118,12 +130,13 @@
         <option value="$PROJECT_DIR$/test.py" />
         <option value="$PROJECT_DIR$/ImageTest.py" />
         <option value="$PROJECT_DIR$/FitContour.py" />
+        <option value="$PROJECT_DIR$/AblationStudy.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="545" />
-    <option name="y" value="117" />
+    <option name="x" value="415" />
+    <option name="y" value="88" />
     <option name="width" value="1280" />
     <option name="height" value="845" />
   </component>
@@ -163,7 +176,28 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.test">
+  <component name="RunManager" selected="Python.AblationStudy">
+    <configuration name="AblationStudy" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="ToothMonitoring" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/AblationStudy.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="FitContour" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="ToothMonitoring" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -250,6 +284,7 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.AblationStudy" />
         <item itemvalue="Python.test" />
         <item itemvalue="Python.FitContour" />
         <item itemvalue="Python.ImageTest" />
@@ -271,15 +306,14 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="545" y="117" width="1280" height="845" extended-state="0" />
-    <editor active="true" />
+    <frame x="415" y="88" width="1280" height="845" extended-state="0" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18232484" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3268206" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32627118" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39925373" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -484,8 +518,18 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/FitContour.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="447">
-          <caret line="1007" column="36" selection-start-line="1007" selection-start-column="36" selection-end-line="1007" selection-end-column="36" />
+        <state relative-caret-position="3120">
+          <caret line="961" column="70" selection-start-line="961" selection-start-column="70" selection-end-line="961" selection-end-column="70" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/AblationStudy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="291">
+          <caret line="1072" selection-start-line="1072" selection-end-line="1072" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>

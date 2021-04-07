@@ -250,6 +250,166 @@ def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1
 
     return residuals
 
+def residual_allpars_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1, Crt2, Ct2, Crt3, Ct3, Crt4, Ct4, pair_pts1, pair_pts2, pair_pts3, pair_pts4):
+    residuals = []
+    tp = []
+    rtp = []
+    tp.append(np.array([pars['tx1'], pars['ty1'], pars['tz1']]))
+    rtp.append(np.array([pars['rtx1'], pars['rty1'], pars['rtz1']]))
+    tp.append(np.array([pars['tx2'], pars['ty2'], pars['tz2']]))
+    rtp.append(np.array([pars['rtx2'], pars['rty2'], pars['rtz2']]))
+    tp.append(np.array([pars['tx3'], pars['ty3'], pars['tz3']]))
+    rtp.append(np.array([pars['rtx3'], pars['rty3'], pars['rtz3']]))
+    tp.append(np.array([pars['tx4'], pars['ty4'], pars['tz4']]))
+    rtp.append(np.array([pars['rtx4'], pars['rty4'], pars['rtz4']]))
+    tp.append(np.array([pars['tx5'], pars['ty5'], pars['tz5']]))
+    rtp.append(np.array([pars['rtx5'], pars['rty5'], pars['rtz5']]))
+    tp.append(np.array([pars['tx6'], pars['ty6'], pars['tz6']]))
+    rtp.append(np.array([pars['rtx6'], pars['rty6'], pars['rtz6']]))
+    tp.append(np.array([pars['tx7'], pars['ty7'], pars['tz7']]))
+    rtp.append(np.array([pars['rtx7'], pars['rty7'], pars['rtz7']]))
+    tp.append(np.array([pars['tx8'], pars['ty8'], pars['tz8']]))
+    rtp.append(np.array([pars['rtx8'], pars['rty8'], pars['rtz8']]))
+    tp.append(np.array([pars['tx9'], pars['ty9'], pars['tz9']]))
+    rtp.append(np.array([pars['rtx9'], pars['rty9'], pars['rtz9']]))
+    tp.append(np.array([pars['tx10'], pars['ty10'], pars['tz10']]))
+    rtp.append(np.array([pars['rtx10'], pars['rty10'], pars['rtz10']]))
+    tp.append(np.array([pars['tx11'], pars['ty11'], pars['tz11']]))
+    rtp.append(np.array([pars['rtx11'], pars['rty11'], pars['rtz11']]))
+    tp.append(np.array([pars['tx12'], pars['ty12'], pars['tz12']]))
+    rtp.append(np.array([pars['rtx12'], pars['rty12'], pars['rtz12']]))
+    crtp1 = np.array([pars['crtx1'], pars['crty1'], pars['crtz1']])
+    ctp1 = np.array([pars['ctx1'], pars['cty1'], pars['ctz1']])
+    crtp2 = np.array([pars['crtx2'], pars['crty2'], pars['crtz2']])
+    ctp2 = np.array([pars['ctx2'], pars['cty2'], pars['ctz2']])
+    crtp3 = np.array([pars['crtx3'], pars['crty3'], pars['crtz3']])
+    ctp3 = np.array([pars['ctx3'], pars['cty3'], pars['ctz3']])
+    crtp4 = np.array([pars['crtx4'], pars['crty4'], pars['crtz4']])
+    ctp4 = np.array([pars['ctx4'], pars['cty4'], pars['ctz4']])
+
+    for k in range(12):
+        if len(pair_pts1[k]) > 0:
+            t_verts = (verts1[k]-offset[k]).dot(Rodrigues(rtp[k])) + offset[k] + tp[k] #individual tooth movement
+
+            #initial camera pose matrix
+            Crt = np.array(Crt1.r)
+            Ct = np.array(Ct1.r)
+            tmpr = R.from_rotvec(Crt)
+            r_mat = tmpr.as_dcm()
+            t_vec = Ct.T
+            cor_mtx = np.zeros((4, 4), dtype='float32')
+            cor_mtx[0:3, 0:3] = r_mat
+            cor_mtx[0:3, 3] = t_vec
+            cor_mtx[3, 3] = 1
+
+            #camera pose optimization pars matrix
+            tmpcr = R.from_rotvec(crtp1)
+            pr_mat = tmpcr.as_dcm()
+            cp_mtx = np.zeros((4, 4), dtype='float32')
+            cp_mtx[0:3, 0:3] = pr_mat
+            cp_mtx[0:3, 3] = ctp1.T
+            cp_mtx[3, 3] = 1
+
+            new_cp = cor_mtx.dot(cp_mtx)
+
+            for i in range(t_verts.size / 3):
+                tmp_v = new_cp.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+                pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+                pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+                residuals.append(pix_v - pair_pts1[k][i][0])
+                residuals.append(pix_u - pair_pts1[k][i][1])
+
+        if len(pair_pts2[k]) > 0:
+            t_verts = (verts2[k]-offset[k]).dot(Rodrigues(rtp[k])) + offset[k] + tp[k]
+
+            Crt = np.array(Crt2.r)
+            Ct = np.array(Ct2.r)
+            tmpr = R.from_rotvec(Crt)
+            r_mat = tmpr.as_dcm()
+            t_vec = Ct.T
+            cor_mtx = np.zeros((4, 4), dtype='float32')
+            cor_mtx[0:3, 0:3] = r_mat
+            cor_mtx[0:3, 3] = t_vec
+            cor_mtx[3, 3] = 1
+
+            tmpcr = R.from_rotvec(crtp2)
+            pr_mat = tmpcr.as_dcm()
+            cp_mtx = np.zeros((4, 4), dtype='float32')
+            cp_mtx[0:3, 0:3] = pr_mat
+            cp_mtx[0:3, 3] = ctp2.T
+            cp_mtx[3, 3] = 1
+
+            new_cp = cor_mtx.dot(cp_mtx)
+
+            for i in range(t_verts.size / 3):
+                tmp_v = new_cp.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+                pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+                pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+                residuals.append(pix_v - pair_pts2[k][i][0])
+                residuals.append(pix_u - pair_pts2[k][i][1])
+
+        if len(pair_pts3[k]) > 0:
+            t_verts = (verts3[k]-offset[k]).dot(Rodrigues(rtp[k])) + offset[k] + tp[k]
+
+            Crt = np.array(Crt3.r)
+            Ct = np.array(Ct3.r)
+            tmpr = R.from_rotvec(Crt)
+            r_mat = tmpr.as_dcm()
+            t_vec = Ct.T
+            cor_mtx = np.zeros((4, 4), dtype='float32')
+            cor_mtx[0:3, 0:3] = r_mat
+            cor_mtx[0:3, 3] = t_vec
+            cor_mtx[3, 3] = 1
+
+            tmpcr = R.from_rotvec(crtp3)
+            pr_mat = tmpcr.as_dcm()
+            cp_mtx = np.zeros((4, 4), dtype='float32')
+            cp_mtx[0:3, 0:3] = pr_mat
+            cp_mtx[0:3, 3] = ctp3.T
+            cp_mtx[3, 3] = 1
+
+            new_cp = cor_mtx.dot(cp_mtx)
+
+            for i in range(t_verts.size / 3):
+                tmp_v = new_cp.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+                pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+                pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+                residuals.append(pix_v - pair_pts3[k][i][0])
+                residuals.append(pix_u - pair_pts3[k][i][1])
+
+        if len(pair_pts4[k]) > 0:
+            t_verts = (verts4[k]-offset[k]).dot(Rodrigues(rtp[k])) + offset[k] + tp[k]
+
+            Crt = np.array(Crt4.r)
+            Ct = np.array(Ct4.r)
+            tmpr = R.from_rotvec(Crt)
+            r_mat = tmpr.as_dcm()
+            t_vec = Ct.T
+            cor_mtx = np.zeros((4, 4), dtype='float32')
+            cor_mtx[0:3, 0:3] = r_mat
+            cor_mtx[0:3, 3] = t_vec
+            cor_mtx[3, 3] = 1
+
+            tmpcr = R.from_rotvec(crtp4)
+            pr_mat = tmpcr.as_dcm()
+            cp_mtx = np.zeros((4, 4), dtype='float32')
+            cp_mtx[0:3, 0:3] = pr_mat
+            cp_mtx[0:3, 3] = ctp4.T
+            cp_mtx[3, 3] = 1
+
+            new_cp = cor_mtx.dot(cp_mtx)
+
+            for i in range(t_verts.size / 3):
+                tmp_v = new_cp.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+                pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
+                pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+                residuals.append(pix_v - pair_pts4[k][i][0])
+                residuals.append(pix_u - pair_pts4[k][i][1])
+
+    residuals = np.vstack(residuals)
+
+    return residuals
+
 def randome_deviation(rseed, rd_range, td_range):
     random.seed(rseed)
     rx = random.random()
@@ -292,6 +452,38 @@ def reverse_camerapose(c_rt, c_t, op_rt, op_t, mean):
     tmprt = R.from_dcm(rc_mat)
     new_crt = tmprt.as_rotvec()
     new_ct = new_RT[0:3, 3].T
+    return new_crt, new_ct
+
+def get_new_camerapose(c_rt, c_t, op_rt, op_t):
+    rtn = np.array(c_rt)
+    tmprt = R.from_rotvec(rtn)
+    rt_mat = tmprt.as_dcm()
+    # inv_rt = np.linalg.inv(rt_mat)
+    t = np.array(c_t)
+    cor_mtx = np.zeros((4, 4), dtype='float32')
+    cor_mtx[0:3, 0:3] = rt_mat
+    cor_mtx[0:3, 3] = t.T
+    cor_mtx[3, 3] = 1
+    # print cor_mtx
+    # inv_cormtx = np.linalg.inv(cor_mtx)
+
+    # Crt = np.array(op_rt)
+    # Ct = np.array(t_row.r)
+    tmpr = R.from_rotvec(op_rt)
+    r_mat = tmpr.as_dcm()
+    # inv_r = np.linalg.inv(r_mat)
+    o_mtx = np.zeros((4, 4), dtype='float32')
+    o_mtx[0:3, 0:3] = np.linalg.inv(r_mat)
+    o_mtx[0:3, 3] = op_t.T
+    o_mtx[3, 3] = 1
+
+    new_RT = cor_mtx.dot(o_mtx)
+    # print new_RT
+
+    rc_mat = new_RT[0:3, 0:3]
+    tmprt = R.from_dcm(rc_mat)
+    new_crt = ch.array(tmprt.as_rotvec())
+    new_ct = ch.array(new_RT[0:3, 3].T)
     return new_crt, new_ct
 
 def parsing_camera_pose(file_camera):
@@ -650,165 +842,40 @@ if __name__ == '__main__':
     obs.append(observed3)
     obs.append(observed4)
     cb_err = [100000, 100000, 100000, 100000]
-    for iter in range(3):
-        rn_contours = []
-        rn_contours.append(rn)
-        rn_contours.append(rn2)
-        rn_contours.append(rn3)
-        rn_contours.append(rn4)
-        rn_depths = []
-        rn_depths.append(drn)
-        rn_depths.append(drn2)
-        rn_depths.append(drn3)
-        rn_depths.append(drn4)
-        rn_rs = []
-        rn_rs.append(rt1)
-        rn_rs.append(rt2)
-        rn_rs.append(rt3)
-        rn_rs.append(rt4)
-        rn_ts = []
-        rn_ts.append(t1)
-        rn_ts.append(t2)
-        rn_ts.append(t3)
-        rn_ts.append(t4)
-        # Camera pose calibration
-        for i in range(4):
-            err = 100000
-            err_dif = 100
-            iter = 0
-            mean = np.mean(V_row.r, axis=0)
-            while not(err < 10 or err_dif < 1 or iter > 20):
-                sample_pts = get_sample_pts(rn_contours[i].r)
-                # intersection_pts, index_ray, index_tri = pj.back_projection(sample_pts, rn_rs[i], rn_ts[i], V_row, row_mesh.f)
-                # pair_pts = get_pair_pts(obs[i], sample_pts, index_ray)
-                sp_ins_pts = pj.back_projection_depth(sample_pts, rn_rs[i], rn_ts[i], rn_depths[i].r)
-                pair_pts, trim_ins_pts = get_pair_pts(obs[i], sample_pts, sp_ins_pts)  # get pairing points
-
-                pars = Parameters()
-                pars.add('rtx', value=0)
-                pars.add('rty', value=0)
-                pars.add('rtz', value=0)
-                pars.add('tx', value=0)
-                pars.add('ty', value=0)
-                pars.add('tz', value=0)
-                out = lmfit.minimize(residual_rtt, pars, args=(mean, trim_ins_pts, rn_rs[i], rn_ts[i], pair_pts), method='leastsq')
-
-                err_dif = cb_err[i] - out.chisqr
-                # cb_err[i] = out.chisqr
-                if (err_dif > 0):
-                    err = out.chisqr
-                    cb_err[i] = out.chisqr
-                    # out.params.pretty_print()
-                    tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
-                    tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
-                    # print tmprt, tmpt
-
-                    tc_rt, tc_t = reverse_camerapose(rn_rs[i], rn_ts[i], tmprt, tmpt, mean)
-                    rn_rs[i] = ch.array(tc_rt)
-                    rn_ts[i] = ch.array(tc_t)
-                    rn_contours[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([f, f]),
-                                                        c=ch.array([w, h]) / 2.,
-                                                        k=ch.zeros(5))
-                    rn_depths[i].camera = ProjectPoints(v=V_row, rt=rn_rs[i], t=rn_ts[i], f=ch.array([f, f]),
-                                                    c=ch.array([w, h]) / 2.,
-                                                    k=ch.zeros(5))
-
-                print out.message, out.chisqr
-
-
-            print("View: %d error: %f --- %s seconds ---" % (i, cb_err[i], time.time() - start_time))
-            total_time += (time.time() - start_time)
-            start_time = time.time()
-
-        rt1 = rn_rs[0]
-        t1 = rn_ts[0]
-        rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
-                                  c=ch.array([w, h]) / 2.,
-                                  k=ch.zeros(5))
-        drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        rt2 = rn_rs[1]
-        t2 = rn_ts[1]
-        rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
-                                  c=ch.array([w, h]) / 2.,
-                                  k=ch.zeros(5))
-        drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        rt3 = rn_rs[2]
-        t3 = rn_ts[2]
-        rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-        crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-        rt4 = rn_rs[3]
-        t4 = rn_ts[3]
-        rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
-                                   c=ch.array([w, h]) / 2.,
-                                   k=ch.zeros(5))
-        drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-        crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
-                                    c=ch.array([w, h]) / 2.,
-                                    k=ch.zeros(5))
-
-        #individual tooth pose estimation
-        for i in range(numTooth):
-            err = 100000
-            err_dif = 100
-            iter = 0
+    for iter in range(1):
+        #optimize all the camera poses and individual tooth poses together
+        err = 100000
+        err_dif = 100
+        iter = 0
+        while not (err < 10 or err_dif < 1 or iter > 20):
+            mean = []
+            ins_pts1 = []
+            ins_pts2 = []
+            ins_pts3 = []
+            ins_pts4 = []
+            pairing_pts1 = []
+            pairing_pts2 = []
+            pairing_pts3 = []
+            pairing_pts4 = []
             # print V_row.shape
             # cur_tooth = V_row[teeth_row_mesh.start_idx_list[i]:teeth_row_mesh.start_idx_list[i+1], 0:3]
             # print cur_tooth.shape
-            while not(err < 10 or err_dif < 1 or iter > 20):
-                mean = np.mean(Vi_list[i].r, axis=0)
+
+            #prepare data
+            for i in range(numTooth):
+                mean.append(np.mean(Vi_list[i].r, axis=0))
                 # print mean
-                curs_time = time.time()
+
                 sample_pts1 = get_sample_pts(rn.r, crn.r, i) #first time using intial rn
-                print('sample point time: %s s' % (time.time() - curs_time))
-                cur_time = time.time()
                 if len(sample_pts1) < 2:
                     pair_pts1 = []
                     trim_ins_pts1 = []
                 else:
                     # get back projection 3D verts and id of 2D points which can find corresponding verts
                     sp_ins_pts1 = pj.back_projection_depth(sample_pts1, rt1, t1, drn.r)
-                    print('back projection time: %s s' % (time.time() - cur_time))
-                    # if iter == 0:
-                    #     Mesh.save_to_obj('result/tooth{}_vertices.obj'.format(i), sp_ins_pts1)
-                    cur_time = time.time()
                     pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1)  # get pairing points
-                    print('pairing time: %s s' % (time.time() - cur_time))
-
-                # intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
-                # get separate tooth's corresponding verts and pair points
-                # sp_ins_pts1 = []
-                # sp_index_ray1 = []
-                # cc = 0
-                # for j in range(index_tri1.size):
-                #     if teeth_row_mesh.faces_num[i] <= index_tri1[j] and index_tri1[j] < teeth_row_mesh.faces_num[i+1]:
-                #         sp_ins_pts1.append(intersection_pts1[j])
-                #         sp_index_ray1.append(index_ray1[j])
-                #         cc += 1
-                # if cc < 2:
-                #     pair_pts1 = []
-                # else:
-                #     sp_ins_pts1 = np.vstack(sp_ins_pts1)
-                #     sp_index_ray1 = np.squeeze(sp_index_ray1)
-                #     pair_pts1 = get_pair_pts(observed1, sample_pts1, sp_index_ray1) #find pair points (only those getting 3D verts)
+                ins_pts1.append(trim_ins_pts1)
+                pairing_pts1.append(pair_pts1)
 
 
                 sample_pts2 = get_sample_pts(rn2.r, crn2.r, i)
@@ -818,22 +885,8 @@ if __name__ == '__main__':
                 else:
                     sp_ins_pts2 = pj.back_projection_depth(sample_pts2, rt2, t2, drn2.r)
                     pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
-
-                # intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
-                # sp_ins_pts2 = []
-                # sp_index_ray2 = []
-                # cc = 0
-                # for j in range(index_tri2.size):
-                #     if teeth_row_mesh.faces_num[i] <= index_tri2[j] and index_tri2[j] < teeth_row_mesh.faces_num[i + 1]:
-                #         sp_ins_pts2.append(intersection_pts2[j])
-                #         sp_index_ray2.append(index_ray2[j])
-                #         cc += 1
-                # if cc < 2:
-                #     pair_pts2 = []
-                # else:
-                #     sp_ins_pts2 = np.vstack(sp_ins_pts2)
-                #     sp_index_ray2 = np.squeeze(sp_index_ray2)
-                #     pair_pts2 = get_pair_pts(observed2, sample_pts2, sp_index_ray2)
+                ins_pts2.append(trim_ins_pts2)
+                pairing_pts2.append(pair_pts2)
 
 
                 sample_pts3 = get_sample_pts(rn3.r, crn3.r, i)
@@ -843,22 +896,9 @@ if __name__ == '__main__':
                 else:
                     sp_ins_pts3 = pj.back_projection_depth(sample_pts3, rt3, t3, drn3.r)
                     pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
+                ins_pts3.append(trim_ins_pts3)
+                pairing_pts3.append(pair_pts3)
 
-                # intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
-                # sp_ins_pts3 = []
-                # sp_index_ray3 = []
-                # cc = 0
-                # for j in range(index_tri3.size):
-                #     if teeth_row_mesh.faces_num[i] <= index_tri3[j] and index_tri3[j] < teeth_row_mesh.faces_num[i + 1]:
-                #         sp_ins_pts3.append(intersection_pts3[j])
-                #         sp_index_ray3.append(index_ray3[j])
-                #         cc += 1
-                # if cc < 2:
-                #     pair_pts3 = []
-                # else:
-                #     sp_ins_pts3 = np.vstack(sp_ins_pts3)
-                #     sp_index_ray3 = np.squeeze(sp_index_ray3)
-                #     pair_pts3 = get_pair_pts(observed3, sample_pts3, sp_index_ray3)
 
                 sample_pts4 = get_sample_pts(rn4.r, crn4.r, i)
                 if len(sample_pts4) < 2:
@@ -867,107 +907,218 @@ if __name__ == '__main__':
                 else:
                     sp_ins_pts4 = pj.back_projection_depth(sample_pts4, rt4, t4, drn4.r)
                     pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
+                ins_pts4.append(trim_ins_pts4)
+                pairing_pts4.append(pair_pts4)
 
-                # intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
-                # sp_ins_pts4 = []
-                # sp_index_ray4 = []
-                # cc = 0
-                # for j in range(index_tri4.size):
-                #     if teeth_row_mesh.faces_num[i] <= index_tri4[j] and index_tri4[j] < teeth_row_mesh.faces_num[i + 1]:
-                #         sp_ins_pts4.append(intersection_pts4[j])
-                #         sp_index_ray4.append(index_ray4[j])
-                #         cc += 1
-                # if cc <2:
-                #     pair_pts4 = []
-                # else:
-                #     # print cc
-                #     sp_ins_pts4 = np.vstack(sp_ins_pts4)
-                #     sp_index_ray4 = np.squeeze(sp_index_ray4)
-                #     # print sp_index_ray4.shape
-                #     pair_pts4 = get_pair_pts(observed4, sample_pts4, sp_index_ray4)
+            #optimization
+            cur_time = time.time()
+            # pars = np.array([0, 0, 0, 0, 0, 0], dtype='float32')
+            pars = Parameters()
+            pars.add('rtx1', value=0)
+            pars.add('rty1', value=0)
+            pars.add('rtz1', value=0)
+            pars.add('tx1', value=0)
+            pars.add('ty1', value=0)
+            pars.add('tz1', value=0)
+            pars.add('rtx2', value=0)
+            pars.add('rty2', value=0)
+            pars.add('rtz2', value=0)
+            pars.add('tx2', value=0)
+            pars.add('ty2', value=0)
+            pars.add('tz2', value=0)
+            pars.add('rtx3', value=0)
+            pars.add('rty3', value=0)
+            pars.add('rtz3', value=0)
+            pars.add('tx3', value=0)
+            pars.add('ty3', value=0)
+            pars.add('tz3', value=0)
+            pars.add('rtx4', value=0)
+            pars.add('rty4', value=0)
+            pars.add('rtz4', value=0)
+            pars.add('tx4', value=0)
+            pars.add('ty4', value=0)
+            pars.add('tz4', value=0)
+            pars.add('rtx5', value=0)
+            pars.add('rty5', value=0)
+            pars.add('rtz5', value=0)
+            pars.add('tx5', value=0)
+            pars.add('ty5', value=0)
+            pars.add('tz5', value=0)
+            pars.add('rtx6', value=0)
+            pars.add('rty6', value=0)
+            pars.add('rtz6', value=0)
+            pars.add('tx6', value=0)
+            pars.add('ty6', value=0)
+            pars.add('tz6', value=0)
+            pars.add('rtx7', value=0)
+            pars.add('rty7', value=0)
+            pars.add('rtz7', value=0)
+            pars.add('tx7', value=0)
+            pars.add('ty7', value=0)
+            pars.add('tz7', value=0)
+            pars.add('rtx8', value=0)
+            pars.add('rty8', value=0)
+            pars.add('rtz8', value=0)
+            pars.add('tx8', value=0)
+            pars.add('ty8', value=0)
+            pars.add('tz8', value=0)
+            pars.add('rtx9', value=0)
+            pars.add('rty9', value=0)
+            pars.add('rtz9', value=0)
+            pars.add('tx9', value=0)
+            pars.add('ty9', value=0)
+            pars.add('tz9', value=0)
+            pars.add('rtx10', value=0)
+            pars.add('rty10', value=0)
+            pars.add('rtz10', value=0)
+            pars.add('tx10', value=0)
+            pars.add('ty10', value=0)
+            pars.add('tz10', value=0)
+            pars.add('rtx11', value=0)
+            pars.add('rty11', value=0)
+            pars.add('rtz11', value=0)
+            pars.add('tx11', value=0)
+            pars.add('ty11', value=0)
+            pars.add('tz11', value=0)
+            pars.add('rtx12', value=0)
+            pars.add('rty12', value=0)
+            pars.add('rtz12', value=0)
+            pars.add('tx12', value=0)
+            pars.add('ty12', value=0)
+            pars.add('tz12', value=0)
+            pars.add('crtx1', value=0)
+            pars.add('crty1', value=0)
+            pars.add('crtz1', value=0)
+            pars.add('ctx1', value=0)
+            pars.add('cty1', value=0)
+            pars.add('ctz1', value=0)
+            pars.add('crtx2', value=0)
+            pars.add('crty2', value=0)
+            pars.add('crtz2', value=0)
+            pars.add('ctx2', value=0)
+            pars.add('cty2', value=0)
+            pars.add('ctz2', value=0)
+            pars.add('crtx3', value=0)
+            pars.add('crty3', value=0)
+            pars.add('crtz3', value=0)
+            pars.add('ctx3', value=0)
+            pars.add('cty3', value=0)
+            pars.add('ctz3', value=0)
+            pars.add('crtx4', value=0)
+            pars.add('crty4', value=0)
+            pars.add('crtz4', value=0)
+            pars.add('ctx4', value=0)
+            pars.add('cty4', value=0)
+            pars.add('ctz4', value=0)
 
+            out = lmfit.minimize(residual_allpars_allview, pars,
+                                 args=(
+                                 mean, ins_pts1, ins_pts2, ins_pts3, ins_pts4, rt1, t1, rt2, t2,
+                                 rt3, t3, rt4, t4, pairing_pts1, pairing_pts2, pairing_pts3, pairing_pts4),
+                                 method='leastsq')
+            print('optimization time: %s s' % (time.time() - cur_time))
 
-                cur_time = time.time()
+            err_dif = err - out.chisqr
+            if (err_dif > 0):
+                err = out.chisqr
+                # out.params.pretty_print()
+                tmprt = []
+                tmpt = []
+                tmprt.append(np.array([out.params['rtx1'], out.params['rty1'], out.params['rtz1']]))
+                tmpt.append(np.array([out.params['tx1'], out.params['ty1'], out.params['tz1']]))
+                tmprt.append(np.array([out.params['rtx2'], out.params['rty2'], out.params['rtz2']]))
+                tmpt.append(np.array([out.params['tx2'], out.params['ty2'], out.params['tz2']]))
+                tmprt.append(np.array([out.params['rtx3'], out.params['rty3'], out.params['rtz3']]))
+                tmpt.append(np.array([out.params['tx3'], out.params['ty3'], out.params['tz3']]))
+                tmprt.append(np.array([out.params['rtx4'], out.params['rty4'], out.params['rtz4']]))
+                tmpt.append(np.array([out.params['tx4'], out.params['ty4'], out.params['tz4']]))
+                tmprt.append(np.array([out.params['rtx5'], out.params['rty5'], out.params['rtz5']]))
+                tmpt.append(np.array([out.params['tx5'], out.params['ty5'], out.params['tz5']]))
+                tmprt.append(np.array([out.params['rtx6'], out.params['rty6'], out.params['rtz6']]))
+                tmpt.append(np.array([out.params['tx6'], out.params['ty6'], out.params['tz6']]))
+                tmprt.append(np.array([out.params['rtx7'], out.params['rty7'], out.params['rtz7']]))
+                tmpt.append(np.array([out.params['tx7'], out.params['ty7'], out.params['tz7']]))
+                tmprt.append(np.array([out.params['rtx8'], out.params['rty8'], out.params['rtz8']]))
+                tmpt.append(np.array([out.params['tx8'], out.params['ty8'], out.params['tz8']]))
+                tmprt.append(np.array([out.params['rtx9'], out.params['rty9'], out.params['rtz9']]))
+                tmpt.append(np.array([out.params['tx9'], out.params['ty9'], out.params['tz9']]))
+                tmprt.append(np.array([out.params['rtx10'], out.params['rty10'], out.params['rtz10']]))
+                tmpt.append(np.array([out.params['tx10'], out.params['ty10'], out.params['tz10']]))
+                tmprt.append(np.array([out.params['rtx11'], out.params['rty11'], out.params['rtz11']]))
+                tmpt.append(np.array([out.params['tx11'], out.params['ty11'], out.params['tz11']]))
+                tmprt.append(np.array([out.params['rtx12'], out.params['rty12'], out.params['rtz12']]))
+                tmpt.append(np.array([out.params['tx12'], out.params['ty12'], out.params['tz12']]))
+                print tmprt, tmpt
 
-                # pars = np.array([0, 0, 0, 0, 0, 0], dtype='float32')
-                pars = Parameters()
-                pars.add('rtx', value=0)
-                pars.add('rty', value=0)
-                pars.add('rtz', value=0)
-                pars.add('tx', value=0)
-                pars.add('ty', value=0)
-                pars.add('tz', value=0)
-                out = lmfit.minimize(residual_rtt_allview, pars,
-                                    args=(mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
-                                    method='leastsq')
-                print('optimization time: %s s' % (time.time() - cur_time))
-                cur_time = time.time()
-                err_dif = err - out.chisqr
-                if (err_dif > 0):
-                    err = out.chisqr
-                    # out.params.pretty_print()
-                    tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
-                    tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
-                    print tmprt, tmpt
+                for i in range(12):
+                    Vi_list[i] = (Vi_list[i] - mean[i]).dot(Rodrigues(tmprt[i])) + mean[i] + tmpt[i]
 
+                V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
+                # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
 
+                tcrt1 = np.array([out.params['crtx1'], out.params['crty1'], out.params['crtz1']])
+                tct1 = np.array([out.params['ctx1'], out.params['cty1'], out.params['ctz1']])
+                tcrt2 = np.array([out.params['crtx2'], out.params['crty2'], out.params['crtz2']])
+                tct2 = np.array([out.params['ctx2'], out.params['cty2'], out.params['ctz2']])
+                tcrt3 = np.array([out.params['crtx3'], out.params['crty3'], out.params['crtz3']])
+                tct3 = np.array([out.params['ctx3'], out.params['cty3'], out.params['ctz3']])
+                tcrt4 = np.array([out.params['crtx4'], out.params['crty4'], out.params['crtz4']])
+                tct4 = np.array([out.params['ctx4'], out.params['cty4'], out.params['ctz4']])
+                print tcrt1, tct1, tcrt2, tct2, tcrt3, tct3, tcrt4, tct4
 
+                rt1, t1 = get_new_camerapose(rt1, t1, tcrt1, tct1)
+                rt2, t2 = get_new_camerapose(rt2, t2, tcrt2, tct2)
+                rt3, t3 = get_new_camerapose(rt3, t3, tcrt3, tct3)
+                rt4, t4 = get_new_camerapose(rt4, t4, tcrt4, tct4)
 
+            print out.message, out.chisqr
 
-                    Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
-                    V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
-                    # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
-
-                print out.message, out.chisqr
-
-                #reproject 2D contour
-                rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
+            # reproject 2D contour
+            rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
+                                      c=ch.array([w, h]) / 2.,
+                                      k=ch.zeros(5))
+            rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
+                                       c=ch.array([w, h]) / 2.,
+                                       k=ch.zeros(5))
+            rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
+                                       c=ch.array([w, h]) / 2.,
+                                       k=ch.zeros(5))
+            rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+                                       c=ch.array([w, h]) / 2.,
+                                       k=ch.zeros(5))
+            drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
+                                       c=ch.array([w, h]) / 2.,
+                                       k=ch.zeros(5))
+            drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
+            drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
+            drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+            crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
+                                       c=ch.array([w, h]) / 2.,
+                                       k=ch.zeros(5))
+            crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
-                drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
-                                          c=ch.array([w, h]) / 2.,
-                                          k=ch.zeros(5))
-                drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
-                                           c=ch.array([w, h]) / 2.,
-                                           k=ch.zeros(5))
-                drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
-                                           c=ch.array([w, h]) / 2.,
-                                           k=ch.zeros(5))
-                drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
-                                           c=ch.array([w, h]) / 2.,
-                                           k=ch.zeros(5))
-                crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
-                                           c=ch.array([w, h]) / 2.,
-                                           k=ch.zeros(5))
-                crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
-                                            c=ch.array([w, h]) / 2.,
-                                            k=ch.zeros(5))
-                crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
-                                            c=ch.array([w, h]) / 2.,
-                                            k=ch.zeros(5))
-                crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
-                                            c=ch.array([w, h]) / 2.,
-                                            k=ch.zeros(5))
-                print('rerendering time: %s s' % (time.time() - cur_time))
-                if (iter == 0):
-                    print('one step time: %s s' % (time.time() - curs_time))
-                # Mesh.save_to_obj('result/V_row_op.obj', V_row, row_mesh.f)
-                # rn_c2 = deepcopy(rn.r)
-                # rn_c2[rn_c2[:, :, 0] > 0] *= [0, 1, 0]
-                #
-                # plt.imshow(rn_c2 + rn_c)
-                # plt.show()
-                # break
-                iter += 1
+            crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
+                                        c=ch.array([w, h]) / 2.,
+                                        k=ch.zeros(5))
+            crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+                                        c=ch.array([w, h]) / 2.,
+                                        k=ch.zeros(5))
+
+            # Mesh.save_to_obj('result/V_row_op.obj', V_row, row_mesh.f)
+            # rn_c2 = deepcopy(rn.r)
+            # rn_c2[rn_c2[:, :, 0] > 0] *= [0, 1, 0]
+            #
+            # plt.imshow(rn_c2 + rn_c)
+            # plt.show()
+            # break
+            iter += 1
 
             # draw contours of different views
             if axarr is None:
@@ -990,200 +1141,25 @@ if __name__ == '__main__':
             axarr[1, 0].imshow(rn3_dc + ob3_dc)
             axarr[1, 1].imshow(rn4_dc + ob4_dc)
 
-            scipy.misc.imsave('result/log/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
-            scipy.misc.imsave('result/log/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
-            scipy.misc.imsave('result/log/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
-
-            print("tooth id: %d error: %f --- %s seconds ---" % (i, err, time.time() - start_time))
-            total_time += (time.time() - start_time)
-            start_time = time.time()
+            scipy.misc.imsave('result/log_allpars/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
+            scipy.misc.imsave('result/log_allpars/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
 
             plt.pause(5)
 
+        print("final error: %f total time:--- %s seconds ---" % (err, time.time() - start_time))
+        total_time += (time.time() - start_time)
+        start_time = time.time()
+
+
     print("total time --- %s seconds ---" % (total_time))
-    Mesh.save_to_obj('result/V_row_opm.obj', V_row, row_mesh.f)
-
-
-    # observed5 = load_image(img5_file_path)
-    # E_raw5 = rn5 - observed5
-    # E_pyr5 = gaussian_pyramid(E_raw5, n_levels=n_level, normalization=normalizations[nth])  # , normalization='size'
-    # objs['View5'] = E_pyr5
-
-    # w_s = 1.0e-1
-    # E_sparse = 0
-    # for i in range(numTooth):
-    #     E_sparse += ch.abs(Ri_list[i]).sum() + ch.abs(ti_list[i]).sum()
-    # E_sparse = w_s*E_sparse/numTooth
-
-    # plt.ion()
-    # # ax1, ax2, ax3, ax4 = None, None, None, None
-    # fig, axarr = None, None
-    # ob1_dc = deepcopy(observed1)
-    # ob2_dc = deepcopy(observed2)
-    # ob3_dc = deepcopy(observed3)
-    # ob4_dc = deepcopy(observed4)
-    # # ob5_dc = deepcopy(observed5)
-    # ob1_dc[ob1_dc[:, :, 0] > 0] *= [0, 1, 0]
-    # ob2_dc[ob2_dc[:, :, 0] > 0] *= [0, 1, 0]
-    # ob3_dc[ob3_dc[:, :, 0] > 0] *= [0, 1, 0]
-    # ob4_dc[ob4_dc[:, :, 0] > 0] *= [0, 1, 0]
-    # fit_vis = []
-    # # ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
-    # iter = 0
-    # start_time = time.time()
-    #
-    # def cb(_):
-    #     global ob1_dc, ob2_dc, ob3_dc, ob4_dc, fig, axarr, iter, start_time
-    #
-    #     print("--- %s seconds ---" % (time.time() - start_time))
-    #
-    #     if axarr is None:
-    #         fig, axarr = plt.subplots(2, 2, sharex='col', sharey='row', gridspec_kw={'wspace': 0, 'hspace': 0})
-    #         # fig.subplots_adjust(hspace=0, wspace=0)
-    #     fig.patch.set_facecolor('grey')
-    #
-    #     rn1_dc = deepcopy(rn.r)
-    #     rn2_dc = deepcopy(rn2.r)
-    #     rn3_dc = deepcopy(rn3.r)
-    #     rn4_dc = deepcopy(rn4.r)
-    #
-    #     rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
-    #     rn2_dc[rn2_dc[:, :, 0] > 0] *= [1, 0, 0]
-    #     rn3_dc[rn3_dc[:, :, 0] > 0] *= [1, 0, 0]
-    #     rn4_dc[rn4_dc[:, :, 0] > 0] *= [1, 0, 0]
-    #
-    #     axarr[0, 0].imshow(rn1_dc + ob1_dc)
-    #     axarr[0, 1].imshow(rn2_dc + ob2_dc)
-    #     axarr[1, 0].imshow(rn3_dc + ob3_dc)
-    #     axarr[1, 1].imshow(rn4_dc + ob4_dc)
-    #     # fig.subplots_adjust(hspace=0, wspace=0)
-    #
-    #     # fit_vis.append(rn1_dc + ob1_dc)
-    #     # fit_vis.append(rn2_dc + ob2_dc)
-    #     # fit_vis.append(rn3_dc + ob3_dc)
-    #     # fit_vis.append(rn4_dc + ob4_dc)
-    #
-    #     scipy.misc.imsave('result/log/fittingresult1_iter{}.jpg'.format(iter), rn1_dc + ob1_dc)
-    #     scipy.misc.imsave('result/log/fittingresult1_iter{}a.jpg'.format(iter), rn1_dc)
-    #     scipy.misc.imsave('result/log/fittingresult1_iter{}b.jpg'.format(iter), ob1_dc)
-    #     scipy.misc.imsave('result/log/fittingresult2_iter{}.jpg'.format(iter), rn2_dc + ob2_dc)
-    #     scipy.misc.imsave('result/log/fittingresult2_iter{}a.jpg'.format(iter), rn2_dc)
-    #     scipy.misc.imsave('result/log/fittingresult2_iter{}b.jpg'.format(iter), ob2_dc)
-    #     scipy.misc.imsave('result/log/fittingresult3_iter{}.jpg'.format(iter), rn3_dc + ob3_dc)
-    #     scipy.misc.imsave('result/log/fittingresult3_iter{}a.jpg'.format(iter), rn3_dc)
-    #     scipy.misc.imsave('result/log/fittingresult3_iter{}b.jpg'.format(iter), ob3_dc)
-    #     scipy.misc.imsave('result/log/fittingresult4_iter{}.jpg'.format(iter), rn4_dc + ob4_dc)
-    #     scipy.misc.imsave('result/log/fittingresult4_iter{}a.jpg'.format(iter), rn4_dc)
-    #     scipy.misc.imsave('result/log/fittingresult4_iter{}b.jpg'.format(iter), ob4_dc)
-    #     iter += 1
-    #     start_time = time.time()
-    #
-    #     # vis_img = np.vstack([np.hstack([rn1_dc + ob1_dc, rn2_dc + ob2_dc]), np.hstack([rn3_dc + ob3_dc, rn4_dc + ob4_dc])])
-    #     # vw.write(vis_img)
-    #
-    #     plt.pause(5)
-
-    # stages = 1
-    # methods = ['dogleg', 'SLSQP', 'Newton-CG', 'BFGS']
-    # method = 1 #'trust-ncg' #'newton-cg' #''BFGS' #'dogleg'
-    # # option = {'maxiter': 1000, 'disp': 1, 'e_3': 1.0e-4}
-    # option = {'disp': True}
-    # # option = None
-    # tol = 1e-15
-    # ch.random.seed(19921122)
-    # random_move = lambda x, order: (1.0 - 1.0 / np.e**order + 2*np.random.rand(3) / np.e**order)*x
-    # start_time = time.time()
-    # # todo: only a few teeth moved, so adding a sparse constraint to Ri_list and ti_list should make a better result.
-    # print ('OPTIMIZING TRANSLATION, ROTATION: method=[{}]'.format(methods[method]))
-    # for stage in range(stages):
-    #     print('## Stage {} ##'.format(stage))
-    #     # randomly jump around the solution to help get rid of local minimum,=
-    #     #  as the stage increase, the movement should be smaller
-    #     if stage != 0:
-    #         #R_row[:] = random_move(R_row.r, stage)
-    #         #t_row[:] = random_move(t_row.r, stage)
-    #         for i in range(numTooth):
-    #             Ri_list[i][:] = random_move(Ri_list[i].r, stage+4)
-    #             ti_list[i][:] = random_move(ti_list[i].r, stage+4)
-    #     # ch.minimize({'pyr1': E_pyr1}, x0=[t_row], callback=cb, method=method, options=option, tol=tol)
-    #     # ch.minimize({'pyr2': E_pyr1}, x0=[R_row, t_row], callback=cb, method=method, options=option, tol=tol)
-    #     # ch.minimize({'pyr3': E_pyr1}, x0=ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
-    #     # ch.minimize({'pyr4': E_pyr1}, x0=Ri_list + ti_list, callback=cb, method=method, options=option, tol=tol) #[R_row, t_row] +
-    #
-    #     if stage == 0:
-    #         print('Sub-stage {}-1: x0=[t_row]'.format(stage))
-    #         op.minimize(residual, x0=[t_row], callback=cb, method=methods[method], options=option, tol=tol)
-    #
-    #         print('Sub-stage {}-2: x0=[R_row, t_row]'.format(stage))
-    #         op.minimize(residual, x0=[R_row, t_row], callback=cb, method=methods[method], options=option, tol=tol)
-    #
-    #     # print('Sub-stage {}-3: x0=[R_row, t_row] + ti_list'.format(stage))
-    #     # ch.minimize(objs, x0=[R_row, t_row] + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
-    #
-    #     for k in range(3):
-    #         for i in range(2):
-    #             print('Sub-stage {}-3, round {}: x0=ti_list'.format(stage, i))
-    #             for j in range(numTooth):
-    #                 ch.minimize(residual, x0=[ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)
-    #
-    #         for i in range(3):
-    #             print('Sub-stage {}-4, round {}: x0=Ri_list'.format(stage, i))
-    #             for j in range(numTooth):
-    #                 ch.minimize(residual, x0=[Ri_list[j]], callback=cb, method=methods[method], options=option, tol=tol)  # Ri_list +
-    #
-    #     for i in range(2):
-    #         print('Sub-stage {}-5, round {}: x0=Ri_list+ti_list'.format(stage, i))
-    #         for j in range(numTooth):
-    #             ch.minimize(residual, x0=[Ri_list[j], ti_list[j]], callback=cb, method=methods[method], options=option, tol=tol)   #Ri_list + ti_list
-    #
-    #     # print('Sub-stage {}-6: x0=[R_row, t_row] + Ri_list + ti_list'.format(stage))
-    #     # ch.minimize(objs, x0=[R_row, t_row] + Ri_list + ti_list, callback=cb, method=methods[method], options=option, tol=tol)  # [R_row, t_row] +
-    #
-    #     Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), V_row.r, row_mesh.f)
-    #     t_c = len(teeth_row_mesh.mesh_list[0].v)
-    #     vert_t = [[] for i in range(numTooth)]
-    #     mvert_t = [[] for i in range(numTooth)]
-    #     idx = 0
-    #     for i in range(V_row.shape[0]):
-    #         if i < t_c:
-    #             vert_t[idx].append(V_row[i].r)
-    #         else:
-    #             idx += 1
-    #             vert_t[idx].append(V_row[i].r)
-    #             t_c += len(teeth_row_mesh.mesh_list[idx].v)
-    #         mvert_t[idx].append(moved_mesh.row_mesh.v[i])
-    #
-    #     for i in range(numTooth):
-    #         #Mesh.save_to_obj('result/fittedRow_stage{}.obj'.format(stage), vert_t[i], teeth_row_mesh.mesh_list[i].f)
-    #         #print(i)
-    #         d, Z, tform = p.procrustes(np.array(mvert_t[i]), np.array(vert_t[i]), scaling=False)
-    #         # new_mvert_t = mvert_t / 2.0
-    #         # new_mvert_t *= moved_mesh.max_v
-    #         # new_vert_t = vert_t / 2.0
-    #         # new_vert_t *= teeth_row_mesh.max_v
-    #         # d1, Z1, tform1 = p.procrustes(np.array(new_mvert_t[i]), np.array(new_vert_t[i]), scaling=False)
-    #         #print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']), 'scale_reverse:', tform1['translation'], p.rotationMatrixToEulerAngles(tform1['rotation']))
-    #         print ("--tooth_{}'s errors are: ".format(i), d, tform['translation'], p.rotationMatrixToEulerAngles(tform['rotation']))
-    #     scipy.misc.imsave('result/fittingresult1_stage{}.jpg'.format(stage), rn.r)
-    #     scipy.misc.imsave('result/fittingresult2_stage{}.jpg'.format(stage), rn2.r)
-    #     scipy.misc.imsave('result/fittingresult3_stage{}.jpg'.format(stage), rn3.r)
-    #     scipy.misc.imsave('result/fittingresult4_stage{}.jpg'.format(stage), rn4.r)
-    #     # scipy.misc.imsave('result/fittingresult5_stage{}.jpg'.format(stage), rn5.r)
-    #     # scipy.misc.imsave('result/fittingresult_diff1_stage{}.jpg'.format(stage), np.abs(E_raw1.r))
-    #     # scipy.misc.imsave('result/fittingresult_diff2_stage{}.jpg'.format(stage), np.abs(E_raw2.r))
-    #     # scipy.misc.imsave('result/fittingresult_diff3_stage{}.jpg'.format(stage), np.abs(E_raw3.r))
-    #     # scipy.misc.imsave('result/fittingresult_diff4_stage{}.jpg'.format(stage), np.abs(E_raw4.r))
-    #     # scipy.misc.imsave('result/fittingresult_diff5_stage{}.jpg'.format(stage), np.abs(E_raw5.r))
-    #
-    #
-    # print("---Optimization takes %s seconds ---" % (time.time()-start_time))
-    # #vw.release()
+    Mesh.save_to_obj('result/V_row_opm_allpars.obj', V_row, row_mesh.f)
