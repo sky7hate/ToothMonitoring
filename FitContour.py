@@ -143,7 +143,7 @@ def residual_t(pars, verts, Crt, Ct, pair_pts):
     return residuals
 
 #residual for translation and rotation for one view
-def residual_rtt(pars, offset, verts, Crt, Ct, pair_pts):
+def residual_rtt(pars, w, h, f, offset, verts, Crt, Ct, pair_pts):
     tp = np.array([pars['tx'], pars['ty'], pars['tz']])
     rtp = np.array([pars['rtx'], pars['rty'], pars['rtz']])
     t_verts = (verts-offset).dot(Rodrigues(rtp)) + offset + tp
@@ -160,8 +160,8 @@ def residual_rtt(pars, offset, verts, Crt, Ct, pair_pts):
     residuals = []
     for i in range(t_verts.size / 3):
         tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
-        pix_u = 320*(tmp_v[0]/tmp_v[2]) + 320
-        pix_v = 320*(tmp_v[1]/tmp_v[2]) + 240
+        pix_u = f*(tmp_v[0]/tmp_v[2]) + w/2
+        pix_v = f*(tmp_v[1]/tmp_v[2]) + h/2
         residuals.append(pix_v-pair_pts[i][0])
         residuals.append(pix_u-pair_pts[i][1])
     residuals = np.vstack(residuals)
@@ -169,7 +169,7 @@ def residual_rtt(pars, offset, verts, Crt, Ct, pair_pts):
     return residuals
 
 #residual for translation and rotation for all the views (individual tooth)
-def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1, Crt2, Ct2, Crt3, Ct3, Crt4, Ct4, pair_pts1, pair_pts2, pair_pts3, pair_pts4):
+def residual_rtt_allview(pars, w, h, f, offset, verts1, verts2, verts3, verts4, Crt1, Ct1, Crt2, Ct2, Crt3, Ct3, Crt4, Ct4, pair_pts1, pair_pts2, pair_pts3, pair_pts4):
     residuals = []
     tp = np.array([pars['tx'], pars['ty'], pars['tz']])
     rtp = np.array([pars['rtx'], pars['rty'], pars['rtz']])
@@ -187,8 +187,8 @@ def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1
         cor_mtx[3, 3] = 1
         for i in range(t_verts.size / 3):
             tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
-            pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
-            pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+            pix_u = f * (tmp_v[0] / tmp_v[2]) + w/2
+            pix_v = f * (tmp_v[1] / tmp_v[2]) + h/2
             residuals.append(pix_v - pair_pts1[i][0])
             residuals.append(pix_u - pair_pts1[i][1])
 
@@ -205,8 +205,8 @@ def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1
         cor_mtx[3, 3] = 1
         for i in range(t_verts.size / 3):
             tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
-            pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
-            pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+            pix_u = f * (tmp_v[0] / tmp_v[2]) + w/2
+            pix_v = f * (tmp_v[1] / tmp_v[2]) + h/2
             residuals.append(pix_v - pair_pts2[i][0])
             residuals.append(pix_u - pair_pts2[i][1])
 
@@ -223,8 +223,8 @@ def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1
         cor_mtx[3, 3] = 1
         for i in range(t_verts.size / 3):
             tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
-            pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
-            pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+            pix_u = f * (tmp_v[0] / tmp_v[2]) + w/2
+            pix_v = f * (tmp_v[1] / tmp_v[2]) + h/2
             residuals.append(pix_v - pair_pts3[i][0])
             residuals.append(pix_u - pair_pts3[i][1])
 
@@ -241,8 +241,8 @@ def residual_rtt_allview(pars, offset, verts1, verts2, verts3, verts4, Crt1, Ct1
         cor_mtx[3, 3] = 1
         for i in range(t_verts.size / 3):
             tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
-            pix_u = 320 * (tmp_v[0] / tmp_v[2]) + 320
-            pix_v = 320 * (tmp_v[1] / tmp_v[2]) + 240
+            pix_u = f * (tmp_v[0] / tmp_v[2]) + w/2
+            pix_v = f * (tmp_v[1] / tmp_v[2]) + h/2
             residuals.append(pix_v - pair_pts4[i][0])
             residuals.append(pix_u - pair_pts4[i][1])
 
@@ -301,7 +301,10 @@ def parsing_camera_pose(file_camera):
     cpose = []
     for line in lines:
         if cc == 0:
-            pf = float(line) / 52 * 640
+            tmp = line.split(' ')
+            pw = int(tmp[2])
+            ph = int(tmp[3])
+            pf = float(tmp[0]) / float(tmp[1]) * pw
             cc +=1
             continue
         tmp = line.split(', ')
@@ -314,7 +317,7 @@ def parsing_camera_pose(file_camera):
     pt3 = ch.array(cpose[5])
     prt4 = ch.array(cpose[6])
     pt4 = ch.array(cpose[7])
-    return prt1, pt1, prt2, pt2, prt3, pt3, prt4, pt4, pf
+    return prt1, pt1, prt2, pt2, prt3, pt3, prt4, pt4, pf, pw, ph
 
 
 if __name__ == '__main__':
@@ -354,6 +357,7 @@ if __name__ == '__main__':
     rt4 = ch.array([0.1, 0.4, 0]) * np.pi / 2
     t4 = ch.array([-1.4, 0.3, 0.2])
     f = 320
+    w, h = (640, 480)
 
     #parsing the input arguments
     if args.t_model is not None:
@@ -367,7 +371,7 @@ if __name__ == '__main__':
     if args.view4 is not None:
         img4_file_path = args.view4
     if args.camera_pose is not None:
-        rt1, t1, rt2, t2, rt3, t3, rt4, t4, f = parsing_camera_pose(args.camera_pose)
+        rt1, t1, rt2, t2, rt3, t3, rt4, t4, f, w, h = parsing_camera_pose(args.camera_pose)
     else:
         if args.rt1 is not None:
             rt1 = ch.array(args.rt1)
@@ -425,8 +429,6 @@ if __name__ == '__main__':
     # V_row = t_row + V_comb.mean(axis=0) + (V_comb - V_comb.mean(axis=0)).dot(Rodrigues(R_row))
 
     # Mesh.save_to_obj('result/V_row_gt.obj', V_row.r, row_mesh.f)
-
-    w, h = (640, 480)
 
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
     # vw = cv2.VideoWriter('result/optimRecord.avi', cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (2*w, 2*h))
@@ -677,11 +679,11 @@ if __name__ == '__main__':
             err_dif = 100
             iter = 0
             mean = np.mean(V_row.r, axis=0)
-            while not(err < 10 or err_dif < 1 or iter > 20):
+            while not(err < 1 or err_dif < 0.1 or iter > 20):
                 sample_pts = get_sample_pts(rn_contours[i].r)
                 # intersection_pts, index_ray, index_tri = pj.back_projection(sample_pts, rn_rs[i], rn_ts[i], V_row, row_mesh.f)
                 # pair_pts = get_pair_pts(obs[i], sample_pts, index_ray)
-                sp_ins_pts = pj.back_projection_depth(sample_pts, rn_rs[i], rn_ts[i], rn_depths[i].r)
+                sp_ins_pts = pj.back_projection_depth(w, h, f, sample_pts, rn_rs[i], rn_ts[i], rn_depths[i].r)
                 pair_pts, trim_ins_pts = get_pair_pts(obs[i], sample_pts, sp_ins_pts)  # get pairing points
 
                 pars = Parameters()
@@ -691,13 +693,14 @@ if __name__ == '__main__':
                 pars.add('tx', value=0)
                 pars.add('ty', value=0)
                 pars.add('tz', value=0)
-                out = lmfit.minimize(residual_rtt, pars, args=(mean, trim_ins_pts, rn_rs[i], rn_ts[i], pair_pts), method='leastsq')
+                out = lmfit.minimize(residual_rtt, pars, args=(w, h, f, mean, trim_ins_pts, rn_rs[i], rn_ts[i], pair_pts), method='leastsq')
 
-                err_dif = cb_err[i] - out.chisqr
+                totol_num = len(pair_pts)
+                err_dif = cb_err[i] - out.chisqr/totol_num
                 # cb_err[i] = out.chisqr
                 if (err_dif > 0):
-                    err = out.chisqr
-                    cb_err[i] = out.chisqr
+                    err = out.chisqr/totol_num
+                    cb_err[i] = out.chisqr/totol_num
                     # out.params.pretty_print()
                     tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
                     tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
@@ -713,7 +716,7 @@ if __name__ == '__main__':
                                                     c=ch.array([w, h]) / 2.,
                                                     k=ch.zeros(5))
 
-                print out.message, out.chisqr
+                print out.message, out.chisqr, out.chisqr/totol_num
 
 
             print("View: %d error: %f --- %s seconds ---" % (i, cb_err[i], time.time() - start_time))
@@ -773,7 +776,7 @@ if __name__ == '__main__':
             # print V_row.shape
             # cur_tooth = V_row[teeth_row_mesh.start_idx_list[i]:teeth_row_mesh.start_idx_list[i+1], 0:3]
             # print cur_tooth.shape
-            while not(err < 10 or err_dif < 1 or iter > 20):
+            while not(err < 1 or err_dif < 0.1 or iter > 20):
                 mean = np.mean(Vi_list[i].r, axis=0)
                 # print mean
                 curs_time = time.time()
@@ -785,7 +788,7 @@ if __name__ == '__main__':
                     trim_ins_pts1 = []
                 else:
                     # get back projection 3D verts and id of 2D points which can find corresponding verts
-                    sp_ins_pts1 = pj.back_projection_depth(sample_pts1, rt1, t1, drn.r)
+                    sp_ins_pts1 = pj.back_projection_depth(w, h, f, sample_pts1, rt1, t1, drn.r)
                     print('back projection time: %s s' % (time.time() - cur_time))
                     # if iter == 0:
                     #     Mesh.save_to_obj('result/tooth{}_vertices.obj'.format(i), sp_ins_pts1)
@@ -816,7 +819,7 @@ if __name__ == '__main__':
                     pair_pts2 = []
                     trim_ins_pts2 = []
                 else:
-                    sp_ins_pts2 = pj.back_projection_depth(sample_pts2, rt2, t2, drn2.r)
+                    sp_ins_pts2 = pj.back_projection_depth(w, h, f, sample_pts2, rt2, t2, drn2.r)
                     pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
 
                 # intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
@@ -841,7 +844,7 @@ if __name__ == '__main__':
                     pair_pts3 = []
                     trim_ins_pts3 = []
                 else:
-                    sp_ins_pts3 = pj.back_projection_depth(sample_pts3, rt3, t3, drn3.r)
+                    sp_ins_pts3 = pj.back_projection_depth(w, h, f, sample_pts3, rt3, t3, drn3.r)
                     pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
 
                 # intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
@@ -865,7 +868,7 @@ if __name__ == '__main__':
                     pair_pts4 = []
                     trim_ins_pts4 = []
                 else:
-                    sp_ins_pts4 = pj.back_projection_depth(sample_pts4, rt4, t4, drn4.r)
+                    sp_ins_pts4 = pj.back_projection_depth(w, h, f, sample_pts4, rt4, t4, drn4.r)
                     pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
 
                 # intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
@@ -898,13 +901,15 @@ if __name__ == '__main__':
                 pars.add('ty', value=0)
                 pars.add('tz', value=0)
                 out = lmfit.minimize(residual_rtt_allview, pars,
-                                    args=(mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
+                                    args=(w, h, f, mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
                                     method='leastsq')
                 print('optimization time: %s s' % (time.time() - cur_time))
+
+                total_pts = len(pair_pts1) + len(pair_pts2) + len(pair_pts3) + len(pair_pts4)
                 cur_time = time.time()
-                err_dif = err - out.chisqr
+                err_dif = err - out.chisqr/total_pts
                 if (err_dif > 0):
-                    err = out.chisqr
+                    err = out.chisqr/total_pts
                     # out.params.pretty_print()
                     tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
                     tmpt = np.array([out.params['tx'], out.params['ty'], out.params['tz']])
@@ -912,13 +917,11 @@ if __name__ == '__main__':
 
 
 
-
-
                     Vi_list[i] = (Vi_list[i] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
                     V_row = ch.vstack([Vi_list[k] for k in range(numTooth)])
                     # V_row = (V_row-mean).dot(Rodrigues(tmprt)) + mean + tmpt
 
-                print out.message, out.chisqr
+                print out.message, out.chisqr, out.chisqr/total_pts
 
                 #reproject 2D contour
                 rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),

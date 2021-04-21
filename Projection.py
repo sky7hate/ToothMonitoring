@@ -76,14 +76,14 @@ def back_projection(sample_pts, rt, t, cur_Vrow, faces):
 
     return intersection_pts_world, index_ray, index_tri
 
-def back_projection_depth(sample_pts, rt, t, dmap):
+def back_projection_depth(w, h, f, sample_pts, rt, t, dmap):
     Crt = np.array(rt.r)
     Ct = np.array(t.r)
     reversed_imgpts = []
     index = len(sample_pts)
     for i in range(index):
         # print sample_pts[i]
-        tmp = [float(sample_pts[i][1] - 320) / 320, float(sample_pts[i][0] - 240) / 320, 1]
+        tmp = [float(sample_pts[i][1] - w/2) / f, float(sample_pts[i][0] - h/2) / f, 1]
         # print tmp
         reversed_imgpts.append(tmp)
     # print index

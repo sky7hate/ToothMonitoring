@@ -847,7 +847,7 @@ if __name__ == '__main__':
         err = 100000
         err_dif = 100
         iter = 0
-        while not (err < 10 or err_dif < 1 or iter > 20):
+        while not (err < 1 or err_dif < 0.1 or iter > 20):
             mean = []
             ins_pts1 = []
             ins_pts2 = []
@@ -857,6 +857,7 @@ if __name__ == '__main__':
             pairing_pts2 = []
             pairing_pts3 = []
             pairing_pts4 = []
+            total_pts = 0
             # print V_row.shape
             # cur_tooth = V_row[teeth_row_mesh.start_idx_list[i]:teeth_row_mesh.start_idx_list[i+1], 0:3]
             # print cur_tooth.shape
@@ -876,6 +877,7 @@ if __name__ == '__main__':
                     pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1)  # get pairing points
                 ins_pts1.append(trim_ins_pts1)
                 pairing_pts1.append(pair_pts1)
+                total_pts += len(pair_pts1)
 
 
                 sample_pts2 = get_sample_pts(rn2.r, crn2.r, i)
@@ -887,6 +889,7 @@ if __name__ == '__main__':
                     pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
                 ins_pts2.append(trim_ins_pts2)
                 pairing_pts2.append(pair_pts2)
+                total_pts += len(pair_pts2)
 
 
                 sample_pts3 = get_sample_pts(rn3.r, crn3.r, i)
@@ -898,6 +901,7 @@ if __name__ == '__main__':
                     pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
                 ins_pts3.append(trim_ins_pts3)
                 pairing_pts3.append(pair_pts3)
+                total_pts += len(pair_pts3)
 
 
                 sample_pts4 = get_sample_pts(rn4.r, crn4.r, i)
@@ -909,6 +913,7 @@ if __name__ == '__main__':
                     pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
                 ins_pts4.append(trim_ins_pts4)
                 pairing_pts4.append(pair_pts4)
+                total_pts += len(pair_pts4)
 
             #optimization
             cur_time = time.time()
@@ -1018,9 +1023,9 @@ if __name__ == '__main__':
                                  method='leastsq')
             print('optimization time: %s s' % (time.time() - cur_time))
 
-            err_dif = err - out.chisqr
+            err_dif = err - out.chisqr/total_pts
             if (err_dif > 0):
-                err = out.chisqr
+                err = out.chisqr/total_pts
                 # out.params.pretty_print()
                 tmprt = []
                 tmpt = []
@@ -1071,7 +1076,7 @@ if __name__ == '__main__':
                 rt3, t3 = get_new_camerapose(rt3, t3, tcrt3, tct3)
                 rt4, t4 = get_new_camerapose(rt4, t4, tcrt4, tct4)
 
-            print out.message, out.chisqr
+            print out.message, out.chisqr/total_pts
 
             # reproject 2D contour
             rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),

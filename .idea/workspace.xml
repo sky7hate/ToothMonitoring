@@ -2,9 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cabfd910-7879-4436-89a4-d88da8cb4041" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/AblationStudy.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AblationStudy.py" beforeDir="false" afterPath="$PROJECT_DIR$/AblationStudy.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/FitContour.py" beforeDir="false" afterPath="$PROJECT_DIR$/FitContour.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Mesh.py" beforeDir="false" afterPath="$PROJECT_DIR$/Mesh.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Projection.py" beforeDir="false" afterPath="$PROJECT_DIR$/Projection.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/camera_pose.txt" beforeDir="false" afterPath="$PROJECT_DIR$/camera_pose.txt" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,11 +16,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/FitContour.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3120">
-              <caret line="961" column="70" selection-start-line="961" selection-start-column="70" selection-end-line="961" selection-end-column="70" />
+            <state relative-caret-position="210">
+              <caret line="920" column="76" lean-forward="true" selection-start-line="920" selection-start-column="28" selection-end-line="920" selection-end-column="76" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -26,11 +28,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/AblationStudy.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="291">
-              <caret line="1072" selection-start-line="1072" selection-end-line="1072" />
+            <state relative-caret-position="125">
+              <caret line="849" column="26" selection-start-line="849" selection-start-column="26" selection-end-line="849" selection-end-column="26" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -41,7 +43,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="124">
+            <state relative-caret-position="2385">
               <caret line="159" column="75" selection-start-line="159" selection-start-column="75" selection-end-line="159" selection-end-column="75" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
@@ -53,8 +55,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/ImageTest.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="251">
-              <caret line="48" column="30" selection-start-line="48" selection-start-column="30" selection-end-line="48" selection-end-column="30" />
+            <state relative-caret-position="275">
+              <caret line="48" column="51" selection-start-line="45" selection-start-column="12" selection-end-line="48" selection-end-column="51" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -63,28 +65,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/opendr/renderer.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1710">
-              <caret line="122" column="27" selection-start-line="122" selection-start-column="27" selection-end-line="122" selection-end-column="27" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/opendr/camera.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="870">
-              <caret line="64" column="6" selection-start-line="64" selection-start-column="6" selection-end-line="64" selection-end-column="6" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Projection.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="870">
-              <caret line="81" column="24" selection-start-line="81" selection-start-column="24" selection-end-line="81" selection-end-column="24" />
+            <state relative-caret-position="-2745">
+              <caret line="102" column="29" lean-forward="true" selection-start-line="102" selection-start-column="29" selection-end-line="102" selection-end-column="29" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
               </folding>
@@ -95,8 +79,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Mesh.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1050">
-              <caret line="76" column="21" selection-start-line="76" selection-start-column="21" selection-end-line="76" selection-end-column="21" />
+            <state relative-caret-position="80">
+              <caret line="76" column="13" selection-start-line="76" selection-start-column="13" selection-end-line="76" selection-end-column="13" />
               <folding>
                 <element signature="e#0#31#0" expanded="true" />
               </folding>
@@ -125,18 +109,20 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/Projection.py" />
-        <option value="$PROJECT_DIR$/Mesh.py" />
         <option value="$PROJECT_DIR$/test.py" />
+        <option value="$PROJECT_DIR$/AblationStudy.py" />
+        <option value="$PROJECT_DIR$/utils2.py" />
+        <option value="$PROJECT_DIR$/crop oral models.py" />
+        <option value="$PROJECT_DIR$/Projection.py" />
         <option value="$PROJECT_DIR$/ImageTest.py" />
         <option value="$PROJECT_DIR$/FitContour.py" />
-        <option value="$PROJECT_DIR$/AblationStudy.py" />
+        <option value="$PROJECT_DIR$/Mesh.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="415" />
-    <option name="y" value="88" />
+    <option name="x" value="398" />
+    <option name="y" value="62" />
     <option name="width" value="1280" />
     <option name="height" value="845" />
   </component>
@@ -176,7 +162,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.AblationStudy">
+  <component name="RunManager" selected="Python.FitContour">
     <configuration name="AblationStudy" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="ToothMonitoring" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -284,9 +270,9 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.FitContour" />
         <item itemvalue="Python.AblationStudy" />
         <item itemvalue="Python.test" />
-        <item itemvalue="Python.FitContour" />
         <item itemvalue="Python.ImageTest" />
         <item itemvalue="Python.Projection" />
       </list>
@@ -306,7 +292,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="415" y="88" width="1280" height="845" extended-state="0" />
+    <frame x="591" y="77" width="1280" height="845" extended-state="0" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18232484" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -341,15 +327,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
           <caret line="124" column="25" selection-start-line="124" selection-start-column="17" selection-end-line="124" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -401,15 +378,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mesh_croper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="e#0#12#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/chumpy/optimization.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-658">
@@ -421,13 +389,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3405">
           <caret line="232" column="8" selection-start-line="232" selection-start-column="8" selection-end-line="232" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/opendr/serialization.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="16" column="4" selection-start-line="16" selection-start-column="4" selection-end-line="16" selection-end-column="4" />
         </state>
       </provider>
     </entry>
@@ -476,50 +437,57 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Projection.py">
+    <entry file="file://$PROJECT_DIR$/mesh_croper.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="870">
-          <caret line="81" column="24" selection-start-line="81" selection-start-column="24" selection-end-line="81" selection-end-column="24" />
+        <state relative-caret-position="171">
+          <caret line="79" column="49" selection-start-line="79" selection-start-column="49" selection-end-line="79" selection-end-column="49" />
           <folding>
-            <element signature="e#0#11#0" expanded="true" />
+            <element signature="e#0#12#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Mesh.py">
+    <entry file="file://$PROJECT_DIR$/crop oral models.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1050">
-          <caret line="76" column="21" selection-start-line="76" selection-start-column="21" selection-end-line="76" selection-end-column="21" />
+        <state relative-caret-position="225">
+          <caret line="48" column="48" lean-forward="true" selection-start-line="48" selection-start-column="48" selection-end-line="48" selection-end-column="48" />
           <folding>
-            <element signature="e#0#31#0" expanded="true" />
+            <element signature="e#0#20#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-820">
+          <caret line="270" column="13" lean-forward="true" selection-start-line="270" selection-start-column="13" selection-end-line="270" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="21">
+          <caret line="76" column="7" lean-forward="true" selection-start-line="76" selection-start-column="7" selection-end-line="76" selection-end-column="7" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///disk2/Data_Jiaming/conda_envs/py2.7/lib/python2.7/site-packages/opendr/serialization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="16" column="4" selection-start-line="16" selection-start-column="4" selection-end-line="16" selection-end-column="4" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="124">
+        <state relative-caret-position="2385">
           <caret line="159" column="75" selection-start-line="159" selection-start-column="75" selection-end-line="159" selection-end-column="75" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/ImageTest.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="251">
-          <caret line="48" column="30" selection-start-line="48" selection-start-column="30" selection-end-line="48" selection-end-column="30" />
-          <folding>
-            <element signature="e#0#10#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FitContour.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3120">
-          <caret line="961" column="70" selection-start-line="961" selection-start-column="70" selection-end-line="961" selection-end-column="70" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
@@ -528,8 +496,48 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/AblationStudy.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="291">
-          <caret line="1072" selection-start-line="1072" selection-end-line="1072" />
+        <state relative-caret-position="125">
+          <caret line="849" column="26" selection-start-line="849" selection-start-column="26" selection-end-line="849" selection-end-column="26" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/ImageTest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="275">
+          <caret line="48" column="51" selection-start-line="45" selection-start-column="12" selection-end-line="48" selection-end-column="51" />
+          <folding>
+            <element signature="e#0#10#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Mesh.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="80">
+          <caret line="76" column="13" selection-start-line="76" selection-start-column="13" selection-end-line="76" selection-end-column="13" />
+          <folding>
+            <element signature="e#0#31#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Projection.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2745">
+          <caret line="102" column="29" lean-forward="true" selection-start-line="102" selection-start-column="29" selection-end-line="102" selection-end-column="29" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FitContour.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="920" column="76" lean-forward="true" selection-start-line="920" selection-start-column="28" selection-end-line="920" selection-end-column="76" />
           <folding>
             <element signature="e#0#11#0" expanded="true" />
           </folding>
