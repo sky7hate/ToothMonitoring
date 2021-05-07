@@ -74,7 +74,7 @@ class TeethRowMesh(object):
         # mean = [[-7.44505049, -2.88865201, 5.98988344]]
         # max_v = 39.6236457824707
         print mean
-        # print max_v
+        print max_v
         # apply the same operation to the teeth_row, each individual tooth and their origin positions
         for m in self.mesh_list:
             m.v -= mean
