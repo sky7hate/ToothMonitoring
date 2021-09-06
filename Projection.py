@@ -81,12 +81,16 @@ def back_projection_depth(w, h, f, sample_pts, rt, t, dmap):
     Ct = np.array(t.r)
     reversed_imgpts = []
     index = len(sample_pts)
+    # tt = time.time()
+    # print "b", tt
     for i in range(index):
         # print sample_pts[i]
         tmp = [float(sample_pts[i][1] - w/2) / f, float(sample_pts[i][0] - h/2) / f, 1]
         # print tmp
         reversed_imgpts.append(tmp)
     # print index
+    # print time.time() - tt
+    # tt = time.time()
 
     Verts_d = []
     for i in range(index):
@@ -95,6 +99,8 @@ def back_projection_depth(w, h, f, sample_pts, rt, t, dmap):
         tmp = [reversed_imgpts[i][0] * d, reversed_imgpts[i][1] * d, d]
         Verts_d.append(tmp)
     Verts_d = np.vstack(Verts_d)
+    # print time.time() - tt
+    # tt = time.time()
 
     tmpr = R.from_rotvec(Crt)
     r_mat = tmpr.as_dcm()
@@ -111,6 +117,7 @@ def back_projection_depth(w, h, f, sample_pts, rt, t, dmap):
         tmp_v = inv_cormtx.dot(np.array([Verts_d[i][0], Verts_d[i][1], Verts_d[i][2], 1]).T)
         Verts_d_world.append([tmp_v[0], tmp_v[1], tmp_v[2]])
     Verts_d_world = np.vstack(Verts_d_world)
+    # print time.time() - tt
 
     return Verts_d_world
 

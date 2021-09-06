@@ -86,16 +86,17 @@ if __name__ == '__main__':
     Ri_list = [ch.zeros(3) for i in range(numTooth)]
     ti_list = [ch.zeros(3) for i in range(numTooth)]
 
-    R_row = ch.array([0, 0, 0.06])
-    t_row = ch.array([0.09, 0, 0])
-    teeth_row_mesh.rotate(R_row)
-    teeth_row_mesh.translate(t_row)
+    # R_row = ch.array([0, 0, 0.06])
+    # t_row = ch.array([0.09, 0, 0])
+    # teeth_row_mesh.rotate(R_row)
+    # teeth_row_mesh.translate(t_row)
 
-    # #random deviation
-    # for i in range(numTooth):
-    #     tmprd, tmptd = randome_deviation(i*(time.time()), 18, 0.04)
-    #     teeth_row_mesh.rotate(tmprd, i)
-    #     teeth_row_mesh.translate(tmptd, i)
+    #random deviation
+    for i in range(numTooth):
+        tmprd, tmptd = randome_deviation(i*(time.time()), 36, 0.009)
+        print tmptd, tmprd
+        teeth_row_mesh.rotate(tmprd, i)
+        teeth_row_mesh.translate(tmptd, i)
 
     Vi_list = [ch.array(teeth_row_mesh.mesh_list[i].v) for i in range(numTooth)]
     Vi_offset = [ch.mean(Vi_list[i], axis=0) for i in range(numTooth)]
@@ -112,14 +113,16 @@ if __name__ == '__main__':
     vert_t = [[] for i in range(numTooth)]
     mvert_t = [[] for i in range(numTooth)]
     idx = 0
+    mean_idx = np.mean(teeth_gt_mesh.mesh_list[idx].v, axis=0, keepdims=True)
     for i in range(V_row.shape[0]):
         if i < t_c:
-            vert_t[idx].append(V_row[i].r)
+            vert_t[idx].append(V_row[i].r - mean_idx[0])
         else:
             idx += 1
-            vert_t[idx].append(V_row[i].r)
+            mean_idx = np.mean(teeth_gt_mesh.mesh_list[idx].v, axis=0, keepdims=True)
+            vert_t[idx].append(V_row[i].r - mean_idx[0])
             t_c += len(teeth_row_mesh.mesh_list[idx].v)
-        mvert_t[idx].append(teeth_gt_mesh.row_mesh.v[i])
+        mvert_t[idx].append(teeth_gt_mesh.row_mesh.v[i] - mean_idx[0])
 
     neighbor = [[] for i in range(numTooth)]
     for i in range(numTooth):
@@ -143,14 +146,14 @@ if __name__ == '__main__':
 
     for i in range(numTooth):
         d, Z, tform = p.procrustes(np.array(vert_t[i]), np.array(mvert_t[i]), scaling=False)
-        print ("--tooth_{}".format(i), 'translation error:', tform['translation'], 'rotation error:', p.rotationMatrixToEulerAngles(tform['rotation']))
+        print ("--tooth_{}".format(i), 'translation error:', tform['translation'] * 32, 'rotation error:', p.rotationMatrixToEulerAngles(tform['rotation']))
         tr = ch.array(p.rotationMatrixToEulerAngles(tform['rotation']))
         tt = ch.array(tform['translation'])
         for k in neighbor[i]:
             # mean = np.mean(mvert_t[k], axis=0, keepdims=True)
             V_n = tt + ch.vstack(mvert_t[k]).dot(Rodrigues(tr))
             d, Z, newtform = p.procrustes(np.array(vert_t[k]), np.array(V_n), scaling=False)
-            print ("--tooth_{} relative to tooth {}".format(k, i), 'translation error:', newtform['translation'], 'rotation error:',
+            print ("--tooth_{} relative to tooth {}".format(k, i), 'translation error:', newtform['translation'] * 32, 'rotation error:',
                     p.rotationMatrixToEulerAngles(newtform['rotation']))
 
         # new_mvert_t = mvert_t / 2.0

@@ -85,10 +85,14 @@ class TeethRowMesh(object):
         self.row_mesh.v /= max_v
         # self.row_mesh.v *= 10.0
 
-        #13282
-        self.rotate(ch.array([-np.pi/2, 0, 0]))
-        self.rotate(ch.array([0, -np.pi/2, 0]))
-        self.translate(ch.array([0, 0, 2]))
+        # new c
+        self.rotate(ch.array([0, -np.pi, 0]))
+        self.rotate(ch.array([-np.pi / 2, 0, 0]))
+
+        #13282/12681
+        # self.rotate(ch.array([-np.pi/2, 0, 0]))
+        # self.rotate(ch.array([0, -np.pi/2, 0]))
+        # self.translate(ch.array([0, 0, 2]))
         #from GuMin
         # self.rotate(ch.array([0, 0, -np.pi]))
         # self.rotate(ch.array([0, -np.pi, 0]))

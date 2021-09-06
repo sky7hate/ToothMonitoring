@@ -175,7 +175,7 @@ def residual_rtt(pars, w, h, f, offset, verts, Crt, Ct, pair_pts):
     return residuals
 
 #residual for translation and rotation for all the views (individual tooth)
-def residual_rtt_allview(pars, w, h, f, offset, verts1, verts2, verts3, verts4, Crt1, Ct1, Crt2, Ct2, Crt3, Ct3, Crt4, Ct4, pair_pts1, pair_pts2, pair_pts3, pair_pts4):
+def residual_rtt_allview(pars, w, h, f, offset, verts1, verts2, verts3, verts4, verts5, verts6, Crt1, Ct1, Crt2, Ct2, Crt3, Ct3, Crt4, Ct4, Crt5, Ct5, Crt6, Ct6, pair_pts1, pair_pts2, pair_pts3, pair_pts4, pair_pts5, pair_pts6):
     residuals = []
     tp = np.array([pars['tx'], pars['ty'], pars['tz']])
     rtp = np.array([pars['rtx'], pars['rty'], pars['rtz']])
@@ -252,6 +252,42 @@ def residual_rtt_allview(pars, w, h, f, offset, verts1, verts2, verts3, verts4, 
             residuals.append(pix_v - pair_pts4[i][0])
             residuals.append(pix_u - pair_pts4[i][1])
 
+    if len(pair_pts5) > 0:
+        t_verts = (verts5-offset).dot(Rodrigues(rtp)) + offset + tp
+        Crt = np.array(Crt5.r)
+        Ct = np.array(Ct5.r)
+        tmpr = R.from_rotvec(Crt)
+        r_mat = tmpr.as_dcm()
+        t_vec = Ct.T
+        cor_mtx = np.zeros((4, 4), dtype='float32')
+        cor_mtx[0:3, 0:3] = r_mat
+        cor_mtx[0:3, 3] = t_vec
+        cor_mtx[3, 3] = 1
+        for i in range(t_verts.size / 3):
+            tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+            pix_u = f * (tmp_v[0] / tmp_v[2]) + w/2
+            pix_v = f * (tmp_v[1] / tmp_v[2]) + h/2
+            residuals.append(pix_v - pair_pts5[i][0])
+            residuals.append(pix_u - pair_pts5[i][1])
+
+    if len(pair_pts6) > 0:
+        t_verts = (verts6-offset).dot(Rodrigues(rtp)) + offset + tp
+        Crt = np.array(Crt6.r)
+        Ct = np.array(Ct6.r)
+        tmpr = R.from_rotvec(Crt)
+        r_mat = tmpr.as_dcm()
+        t_vec = Ct.T
+        cor_mtx = np.zeros((4, 4), dtype='float32')
+        cor_mtx[0:3, 0:3] = r_mat
+        cor_mtx[0:3, 3] = t_vec
+        cor_mtx[3, 3] = 1
+        for i in range(t_verts.size / 3):
+            tmp_v = cor_mtx.dot(np.array([t_verts[i][0], t_verts[i][1], t_verts[i][2], 1]).T)
+            pix_u = f * (tmp_v[0] / tmp_v[2]) + w/2
+            pix_v = f * (tmp_v[1] / tmp_v[2]) + h/2
+            residuals.append(pix_v - pair_pts6[i][0])
+            residuals.append(pix_u - pair_pts6[i][1])
+
     residuals = np.vstack(residuals)
 
     return residuals
@@ -323,7 +359,11 @@ def parsing_camera_pose(file_camera):
     pt3 = ch.array(cpose[5])
     prt4 = ch.array(cpose[6])
     pt4 = ch.array(cpose[7])
-    return prt1, pt1, prt2, pt2, prt3, pt3, prt4, pt4, pf, pw, ph
+    prt5 = ch.array(cpose[8])
+    pt5 = ch.array(cpose[9])
+    prt6 = ch.array(cpose[10])
+    pt6 = ch.array(cpose[11])
+    return prt1, pt1, prt2, pt2, prt3, pt3, prt4, pt4, prt5, pt5, prt6, pt6, pf, pw, ph
 
 
 if __name__ == '__main__':
@@ -383,7 +423,7 @@ if __name__ == '__main__':
     if args.view6 is not None:
         img6_file_path = args.view6
     if args.camera_pose is not None:
-        rt1, t1, rt2, t2, rt3, t3, rt4, t4, f, w, h = parsing_camera_pose(args.camera_pose)
+        rt1, t1, rt2, t2, rt3, t3, rt4, t4, rt5, t5, rt6, t6, f, w, h = parsing_camera_pose(args.camera_pose)
     else:
         if args.rt1 is not None:
             rt1 = ch.array(args.rt1)
@@ -440,7 +480,7 @@ if __name__ == '__main__':
     # V_comb = ch.vstack([ti_list[i] + Vi_list[i].mean(axis=0) + (Vi_list[i] - Vi_list[i].mean(axis=0)).dot(Rodrigues(Ri_list[i])) for i in range(numTooth)])
     # V_row = t_row + V_comb.mean(axis=0) + (V_comb - V_comb.mean(axis=0)).dot(Rodrigues(R_row))
 
-    # Mesh.save_to_obj('result/V_row_initialw.obj', V_row.r, row_mesh.f)
+    # Mesh.save_to_obj('result/V_row_gt6.obj', V_row.r, row_mesh.f)
     # print "ground truth saved"
 
     # Define the codec and create VideoWriter object.The output is stored in 'outpy.avi' file.
@@ -626,10 +666,56 @@ if __name__ == '__main__':
     crn4.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
 
+    rn5 = BoundaryRenderer()
+    drn5 = DepthRenderer()
+    crn5 = ColoredRenderer()
+
+    rn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                               c=ch.array([w, h]) / 2.,
+                               k=ch.zeros(5))
+    drn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                c=ch.array([w, h]) / 2.,
+                                k=ch.zeros(5))
+    crn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                c=ch.array([w, h]) / 2.,
+                                k=ch.zeros(5))
+
+    rn5.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    rn5.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    drn5.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    drn5.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    crn5.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    crn5.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
+
+
+    rn6 = BoundaryRenderer()
+    drn6 = DepthRenderer()
+    crn6 = ColoredRenderer()
+
+    rn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
+                               c=ch.array([w, h]) / 2.,
+                               k=ch.zeros(5))
+    drn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
+                                c=ch.array([w, h]) / 2.,
+                                k=ch.zeros(5))
+    crn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
+                                c=ch.array([w, h]) / 2.,
+                                k=ch.zeros(5))
+
+    rn6.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    rn6.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    drn6.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    drn6.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc * 0 + 1, bgcolor=ch.zeros(3), num_channels=3)
+    crn6.frustum = {'near': 1., 'far': 100., 'width': w, 'height': h}
+    crn6.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
+
+
     obs1 = load_image(img1_file_path)
     obs2 = load_image(img2_file_path)
     obs3 = load_image(img3_file_path)
     obs4 = load_image(img4_file_path)
+    obs5 = load_image(img5_file_path)
+    obs6 = load_image(img6_file_path)
 
     # observed1 = scipy.misc.imresize(obs1, 0.25)
     # observed2 = scipy.misc.imresize(obs2, 0.25)
@@ -640,6 +726,8 @@ if __name__ == '__main__':
     observed2 = cv2.resize(obs2, (obs2.shape[1] / 4, obs2.shape[0] / 4))
     observed3 = cv2.resize(obs3, (obs3.shape[1] / 4, obs3.shape[0] / 4))
     observed4 = cv2.resize(obs4, (obs4.shape[1] / 4, obs4.shape[0] / 4))
+    observed5 = cv2.resize(obs5, (obs5.shape[1] / 4, obs5.shape[0] / 4))
+    observed6 = cv2.resize(obs6, (obs6.shape[1] / 4, obs6.shape[0] / 4))
 
     # draw preparation
     plt.ion()
@@ -648,11 +736,14 @@ if __name__ == '__main__':
     ob2_dc = deepcopy(observed2)
     ob3_dc = deepcopy(observed3)
     ob4_dc = deepcopy(observed4)
-    # ob5_dc = deepcopy(observed5)
+    ob5_dc = deepcopy(observed5)
+    ob6_dc = deepcopy(observed6)
     ob1_dc[ob1_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob2_dc[ob2_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob3_dc[ob3_dc[:, :, 0] > 0] *= [0, 1, 0]
     ob4_dc[ob4_dc[:, :, 0] > 0] *= [0, 1, 0]
+    ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
+    ob6_dc[ob6_dc[:, :, 0] > 0] *= [0, 1, 0]
 
     start_time = time.time()
     total_time = 0
@@ -663,30 +754,40 @@ if __name__ == '__main__':
     obs.append(observed2)
     obs.append(observed3)
     obs.append(observed4)
-    cb_err = [100000, 100000, 100000, 100000]
+    obs.append(observed5)
+    obs.append(observed6)
+    cb_err = [100000, 100000, 100000, 100000, 100000, 100000]
     for iter in range(3):
         rn_contours = []
         rn_contours.append(rn)
         rn_contours.append(rn2)
         rn_contours.append(rn3)
         rn_contours.append(rn4)
+        rn_contours.append(rn5)
+        rn_contours.append(rn6)
         rn_depths = []
         rn_depths.append(drn)
         rn_depths.append(drn2)
         rn_depths.append(drn3)
         rn_depths.append(drn4)
+        rn_depths.append(drn5)
+        rn_depths.append(drn6)
         rn_rs = []
         rn_rs.append(rt1)
         rn_rs.append(rt2)
         rn_rs.append(rt3)
         rn_rs.append(rt4)
+        rn_rs.append(rt5)
+        rn_rs.append(rt6)
         rn_ts = []
         rn_ts.append(t1)
         rn_ts.append(t2)
         rn_ts.append(t3)
         rn_ts.append(t4)
+        rn_ts.append(t5)
+        rn_ts.append(t6)
         # Camera pose calibration
-        for i in range(4):
+        for i in range(6):
             err = 100000
             err_dif = 100
             iter = 0
@@ -786,6 +887,28 @@ if __name__ == '__main__':
                                     c=ch.array([w, h]) / 2.,
                                     k=ch.zeros(5))
         crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+        rt5 = rn_rs[4]
+        t5 = rn_ts[4]
+        rn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        drn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+        crn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+        rt6 = rn_rs[5]
+        t6 = rn_ts[5]
+        rn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
+                                   c=ch.array([w, h]) / 2.,
+                                   k=ch.zeros(5))
+        drn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
+                                    c=ch.array([w, h]) / 2.,
+                                    k=ch.zeros(5))
+        crn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
                                     c=ch.array([w, h]) / 2.,
                                     k=ch.zeros(5))
 
@@ -910,6 +1033,22 @@ if __name__ == '__main__':
                 #     # print sp_index_ray4.shape
                 #     pair_pts4 = get_pair_pts(observed4, sample_pts4, sp_index_ray4)
 
+                sample_pts5 = get_sample_pts(rn5.r, crn5.r, i)
+                if len(sample_pts5) < 2:
+                    pair_pts5 = []
+                    trim_ins_pts5 = []
+                else:
+                    sp_ins_pts5 = pj.back_projection_depth(w, h, f, sample_pts5, rt5, t5, drn5.r)
+                    pair_pts5, trim_ins_pts5 = get_pair_pts(observed5, sample_pts5, sp_ins_pts5)
+
+                sample_pts6 = get_sample_pts(rn6.r, crn6.r, i)
+                if len(sample_pts6) < 2:
+                    pair_pts6 = []
+                    trim_ins_pts6 = []
+                else:
+                    sp_ins_pts6 = pj.back_projection_depth(w, h, f, sample_pts6, rt6, t6, drn6.r)
+                    pair_pts6, trim_ins_pts6 = get_pair_pts(observed6, sample_pts6, sp_ins_pts6)
+
 
                 cur_time = time.time()
 
@@ -922,11 +1061,11 @@ if __name__ == '__main__':
                 pars.add('ty', value=0)
                 pars.add('tz', value=0)
                 out = lmfit.minimize(residual_rtt_allview, pars,
-                                    args=(w, h, f, mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, rt1, t1, rt2, t2, rt3, t3, rt4, t4, pair_pts1, pair_pts2, pair_pts3, pair_pts4),
+                                    args=(w, h, f, mean, trim_ins_pts1, trim_ins_pts2, trim_ins_pts3, trim_ins_pts4, trim_ins_pts5, trim_ins_pts6, rt1, t1, rt2, t2, rt3, t3, rt4, t4, rt5, t5, rt6, t6, pair_pts1, pair_pts2, pair_pts3, pair_pts4, pair_pts5, pair_pts6),
                                     method='leastsq')
                 print('optimization time: %s s' % (time.time() - cur_time))
 
-                total_pts = len(pair_pts1) + len(pair_pts2) + len(pair_pts3) + len(pair_pts4)
+                total_pts = len(pair_pts1) + len(pair_pts2) + len(pair_pts3) + len(pair_pts4) + len(pair_pts5) + len(pair_pts6)
                 cur_time = time.time()
                 err_dif = err - out.chisqr/total_pts
                 if (err_dif > 0):
@@ -957,6 +1096,12 @@ if __name__ == '__main__':
                 rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                         c=ch.array([w, h]) / 2.,
                                         k=ch.zeros(5))
+                rn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                rn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
                 drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
                                           c=ch.array([w, h]) / 2.,
                                           k=ch.zeros(5))
@@ -967,6 +1112,12 @@ if __name__ == '__main__':
                                            c=ch.array([w, h]) / 2.,
                                            k=ch.zeros(5))
                 drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                drn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                drn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
                                            c=ch.array([w, h]) / 2.,
                                            k=ch.zeros(5))
                 crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
@@ -981,6 +1132,12 @@ if __name__ == '__main__':
                 crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                             c=ch.array([w, h]) / 2.,
                                             k=ch.zeros(5))
+                crn5.camera = ProjectPoints(v=V_row, rt=rt5, t=t5, f=ch.array([f, f]),
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
+                crn6.camera = ProjectPoints(v=V_row, rt=rt6, t=t6, f=ch.array([f, f]),
+                                           c=ch.array([w, h]) / 2.,
+                                           k=ch.zeros(5))
                 print('rerendering time: %s s' % (time.time() - cur_time))
                 if (iter == 0):
                     print('one step time: %s s' % (time.time() - curs_time))
@@ -999,33 +1156,44 @@ if __name__ == '__main__':
                 # fig.subplots_adjust(hspace=0, wspace=0)
             fig.patch.set_facecolor('grey')
 
+
             rn1_dc = deepcopy(rn.r)
             rn2_dc = deepcopy(rn2.r)
             rn3_dc = deepcopy(rn3.r)
             rn4_dc = deepcopy(rn4.r)
+            rn5_dc = deepcopy(rn5.r)
+            rn6_dc = deepcopy(rn6.r)
 
             rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
             rn2_dc[rn2_dc[:, :, 0] > 0] *= [1, 0, 0]
             rn3_dc[rn3_dc[:, :, 0] > 0] *= [1, 0, 0]
             rn4_dc[rn4_dc[:, :, 0] > 0] *= [1, 0, 0]
+            rn5_dc[rn5_dc[:, :, 0] > 0] *= [1, 0, 0]
+            rn6_dc[rn6_dc[:, :, 0] > 0] *= [1, 0, 0]
 
             axarr[0, 0].imshow(rn1_dc + ob1_dc)
-            axarr[0, 1].imshow(rn2_dc + ob2_dc)
-            axarr[1, 0].imshow(rn3_dc + ob3_dc)
-            axarr[1, 1].imshow(rn4_dc + ob4_dc)
+            axarr[0, 1].imshow(rn4_dc + ob4_dc)
+            axarr[1, 0].imshow(rn5_dc + ob5_dc)
+            axarr[1, 1].imshow(rn6_dc + ob6_dc)
 
-            scipy.misc.imsave('result/log/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
-            scipy.misc.imsave('result/log/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
-            scipy.misc.imsave('result/log/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult5_iter{}.jpg'.format(i), rn5_dc + ob5_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult5_iter{}a.jpg'.format(i), rn5_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult5_iter{}b.jpg'.format(i), ob5_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult6_iter{}.jpg'.format(i), rn6_dc + ob6_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult6_iter{}a.jpg'.format(i), rn6_dc)
+            scipy.misc.imsave('result/log_6view/fittingresult6_iter{}b.jpg'.format(i), ob6_dc)
 
             print("tooth id: %d error: %f --- %s seconds ---" % (i, err, time.time() - start_time))
             total_time += (time.time() - start_time)
@@ -1034,7 +1202,7 @@ if __name__ == '__main__':
             plt.pause(5)
 
     print("total time --- %s seconds ---" % (total_time))
-    Mesh.save_to_obj('result/V_row_opw.obj', V_row, row_mesh.f)
+    Mesh.save_to_obj('result/V_row_op6.obj', V_row, row_mesh.f)
 
     for i in range(numTooth):
         Mesh.save_to_obj('result/individual_tooth/V_row{}.obj'.format(i), Vi_list[i], teeth_row_mesh.mesh_list[i].f)
