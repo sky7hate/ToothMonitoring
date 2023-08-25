@@ -52,7 +52,7 @@ def get_sample_pts(contour, colormap = None, t_id = None):
     #         f_sample_pts.append(t_sample_pts[i])
 
 
-    f_sample_pts = np.vstack(f_sample_pts)
+    f_sample_pts = np.asarray(f_sample_pts)
     # print index, cc
     sp_pts = []
     if t_id is not None:
@@ -326,6 +326,86 @@ def parsing_camera_pose(file_camera):
     return prt1, pt1, prt2, pt2, prt3, pt3, prt4, pt4, pf, pw, ph
 
 
+def drawfig(iter):
+
+    ob1_dc = deepcopy(observed1)
+    ob2_dc = deepcopy(observed2)
+    ob3_dc = deepcopy(observed3)
+    ob4_dc = deepcopy(observed4)
+    # ob5_dc = deepcopy(observed5)
+    # ob6_dc = deepcopy(observed6)
+
+    ob1_dc[ob1_dc[:, :, 0] > 0] *= [0, 1, 0]
+    ob2_dc[ob2_dc[:, :, 0] > 0] *= [0, 1, 0]
+    ob3_dc[ob3_dc[:, :, 0] > 0] *= [0, 1, 0]
+    ob4_dc[ob4_dc[:, :, 0] > 0] *= [0, 1, 0]
+    # ob5_dc[ob5_dc[:, :, 0] > 0] *= [0, 1, 0]
+    # ob6_dc[ob6_dc[:, :, 0] > 0] *= [0, 1, 0]
+
+    rn1_dc = deepcopy(rn.r)
+    rn2_dc = deepcopy(rn2.r)
+    rn3_dc = deepcopy(rn3.r)
+    rn4_dc = deepcopy(rn4.r)
+    # rn5_dc = deepcopy(rn5.r)
+    # rn6_dc = deepcopy(rn6.r)
+
+    # crn1_dc = deepcopy(crn.r)
+    # crn2_dc = deepcopy(crn2.r)
+    # crn3_dc = deepcopy(crn3.r)
+    # crn4_dc = deepcopy(crn4.r)
+    # crn5_dc = deepcopy(crn5.r)
+    # crn6_dc = deepcopy(crn6.r)
+
+    rn1_dc[rn1_dc[:, :, 0] > 0] *= [1, 0, 0]
+    rn2_dc[rn2_dc[:, :, 0] > 0] *= [1, 0, 0]
+    rn3_dc[rn3_dc[:, :, 0] > 0] *= [1, 0, 0]
+    rn4_dc[rn4_dc[:, :, 0] > 0] *= [1, 0, 0]
+    # rn5_dc[rn5_dc[:, :, 0] > 0] *= [1, 0, 0]
+    # rn6_dc[rn6_dc[:, :, 0] > 0] *= [1, 0, 0]
+
+
+
+    # ob1_dc[rn1_dc[:, :, 0] > 0] = crn1_dc[rn1_dc[:, :, 0] > 0]
+    # ob2_dc[rn2_dc[:, :, 0] > 0] = crn2_dc[rn2_dc[:, :, 0] > 0]
+    # ob3_dc[rn3_dc[:, :, 0] > 0] = crn3_dc[rn3_dc[:, :, 0] > 0]
+    # ob4_dc[rn4_dc[:, :, 0] > 0] = crn4_dc[rn4_dc[:, :, 0] > 0]
+    # ob5_dc[rn5_dc[:, :, 0] > 0] = crn5_dc[rn5_dc[:, :, 0] > 0]
+    # ob6_dc[rn6_dc[:, :, 0] > 0] = crn6_dc[rn6_dc[:, :, 0] > 0]
+    # draw_color(crn1_dc, rn1_dc, ob1_dc)
+    # draw_color(crn2_dc, rn2_dc, ob2_dc)
+    # draw_color(crn3_dc, rn3_dc, ob3_dc)
+    # draw_color(crn4_dc, rn4_dc, ob4_dc)
+    # draw_color(crn5_dc, rn5_dc, ob5_dc)
+    # draw_color(crn6_dc, rn6_dc, ob6_dc)
+
+    # scipy.misc.imsave('result/log2/fittingresult1_iter%02d.jpg'%(iter), ob1_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult1_iter{}a.jpg'.format(iter), rn1_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult1_iter{}b.jpg'.format(iter), ob1_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult1_iter{}.jpg'.format(iter), ob1_dc+rn1_dc)
+    # scipy.misc.imsave('result/log2/fittingresult2_iter%02d.jpg'%(iter), ob2_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult2_iter{}a.jpg'.format(iter), rn2_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult2_iter{}b.jpg'.format(iter), ob2_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult2_iter{}.jpg'.format(iter), ob2_dc + rn2_dc)
+    # scipy.misc.imsave('result/log2/fittingresult3_iter%02d.jpg'%(iter), ob3_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult3_iter{}a.jpg'.format(iter), rn3_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult3_iter{}b.jpg'.format(iter), ob3_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult3_iter{}.jpg'.format(iter), ob3_dc + rn3_dc)
+    # scipy.misc.imsave('result/log2/fittingresult4_iter%02d.jpg'%(iter), ob4_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult4_iter{}a.jpg'.format(iter), rn4_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult4_iter{}b.jpg'.format(iter), ob4_dc)
+    scipy.misc.imsave('result/log2/state/fittingresult4_iter{}.jpg'.format(iter), ob4_dc + rn4_dc)
+    # # scipy.misc.imsave('result/log2/fittingresult5_iter%02d.jpg'%(iter), ob5_dc)
+    # scipy.misc.imsave('result/log2/state/fittingresult5_iter{}a.jpg'.format(iter), rn5_dc)
+    # scipy.misc.imsave('result/log2/state/fittingresult5_iter{}b.jpg'.format(iter), ob5_dc)
+    # scipy.misc.imsave('result/log2/state/fittingresult5_iter{}.jpg'.format(iter), ob5_dc + rn5_dc)
+    # # scipy.misc.imsave('result/log2/fittingresult6_iter%02d.jpg'%(iter), ob6_dc)
+    # scipy.misc.imsave('result/log2/state/fittingresult6_iter{}a.jpg'.format(iter), rn6_dc)
+    # scipy.misc.imsave('result/log2/state/fittingresult6_iter{}b.jpg'.format(iter), ob6_dc)
+    # scipy.misc.imsave('result/log2/state/fittingresult6_iter{}.jpg'.format(iter), ob6_dc + rn6_dc)
+
+    print('fig saved')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--t_model", help="tooth model file folder")
@@ -349,23 +429,36 @@ if __name__ == '__main__':
 
 
     ### default value ####
-    teeth_file_folder = '/home/jiaming/MultiviewFitting/data/upper_segmented/HBF_12681/before'
+    # teeth_file_folder = 'data/raw_model/HBF_12681/before'
     # teeth_file_folder = 'data/from GuMin/seg/model_0'
+    teeth_file_folder = r'/home/sky7hate/Project/MultiviewFitting/data/seg/newU_before'
     # moved_mesh_folder = '/home/jiaming/MultiviewFitting/data/observation/12681/movedRow_real1.obj'
-    img1_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc1.jpg'
-    img2_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc2.jpg'
-    img3_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc3.jpg'
-    img4_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc4.jpg'
-    rt1 = ch.array([0, -0.3, 0]) * np.pi / 2
-    t1 = ch.array([1.2, 0.2, 0])
-    rt2 = ch.array([0.08, 0, 0]) * np.pi / 2
-    t2 = ch.array([-0.05, 0.2, -0.25])
-    rt3 = ch.array([-0.9, 0, 0]) * np.pi / 3
-    t3 = ch.array([0, -1.5, 0.2])
-    rt4 = ch.array([0.1, 0.4, 0]) * np.pi / 2
-    t4 = ch.array([-1.4, 0.3, 0.2])
-    f = 320
+    # img1_file_path = 'data/observation/12681/real_rc1.jpg'
+    # img2_file_path = 'data/observation/12681/real_rc2.jpg'
+    # img3_file_path = 'data/observation/12681/real_rc3.jpg'
+    # img4_file_path = 'data/observation/12681/real_rc4.jpg'
+    img1_file_path = r'/home/sky7hate/Project/MultiviewFitting/data/observation/new_seg/gt/gtcontour_1.jpg'
+    img2_file_path = r'/home/sky7hate/Project/MultiviewFitting/data/observation/new_seg/gt/gtcontour_3.jpg'
+    img3_file_path = r'/home/sky7hate/Project/MultiviewFitting/data/observation/new_seg/gt/gtcontour_5.jpg'
+    img4_file_path = r'/home/sky7hate/Project/MultiviewFitting/data/observation/new_seg/gt/gtcontour_6.jpg'
+    # rt1 = ch.array([0, -0.3, 0]) * np.pi / 2
+    # t1 = ch.array([1.2, 0.2, 0])
+    # rt2 = ch.array([0.08, 0, 0]) * np.pi / 2
+    # t2 = ch.array([-0.05, 0.2, -0.25])
+    # rt3 = ch.array([-0.9, 0, 0]) * np.pi / 3
+    # t3 = ch.array([0, -1.5, 0.2])
+    # rt4 = ch.array([0.1, 0.4, 0]) * np.pi / 2
+    # t4 = ch.array([-1.4, 0.3, 0.2])
+    rt1 = ch.array([0.3, -1.6, -0.015]) * np.pi / 4
+    t1 = ch.array([0.557, -0.20, 3.1])
+    rt2 = ch.array([0.43, 0, 0.03]) * np.pi / 4
+    t2 = ch.array([0.08, 0.03, 2.9])
+    rt3 = ch.array([0.5, 1.78, 0.16]) * np.pi / 4
+    t3 = ch.array([-0.35, -0.28, 3.35])
+    rt4 = ch.array([-2.36, 0.05, 0.05]) * np.pi / 4
+    t4 = ch.array([-0.055, -0.39, 2.3])
     w, h = (640, 480)
+    f = w * 4 / 4.8
 
     #parsing the input arguments
     if args.t_model is not None:
@@ -461,13 +554,13 @@ if __name__ == '__main__':
     #                                k=ch.zeros(5))
     #12681
 
-    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
+    rn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w])*4/4.8,
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-    drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
+    drn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w])*4/4.8,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
-    crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([f, f]),
+    crn.camera = ProjectPoints(v=V_row, rt=rt1, t=t1, f=ch.array([w, w])*4/4.8,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
 
@@ -505,13 +598,13 @@ if __name__ == '__main__':
     #                                k=ch.zeros(5))
     #12681
 
-    rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
+    rn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w])*4/4.8,
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-    drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
+    drn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w])*4/4.8,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
-    crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([f, f]),
+    crn2.camera = ProjectPoints(v=V_row, rt=rt2, t=t2, f=ch.array([w, w])*4/4.8,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -549,13 +642,13 @@ if __name__ == '__main__':
     #                           k=ch.zeros(5))
     #12681
 
-    rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
+    rn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w])*4/4.8,
                               c=ch.array([w, h]) / 2.,
                               k=ch.zeros(5))
-    drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
+    drn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w])*4/4.8,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
-    crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([f, f]),
+    crn3.camera = ProjectPoints(v=V_row, rt=rt3, t=t3, f=ch.array([w, w])*4/4.8,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -594,13 +687,13 @@ if __name__ == '__main__':
     #                                k=ch.zeros(5))
     #12681
 
-    rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+    rn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w])*4/4.8,
                                    c=ch.array([w, h]) / 2.,
                                    k=ch.zeros(5))
-    drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+    drn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w])*4/4.8,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
-    crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
+    crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([w, w])*4/4.8,
                                c=ch.array([w, h]) / 2.,
                                k=ch.zeros(5))
     #13282
@@ -626,20 +719,24 @@ if __name__ == '__main__':
     crn4.set(v=V_row, f=row_mesh.f, vc=row_mesh.vc, bgcolor=ch.zeros(3), num_channels=3)
 
 
-    obs1 = load_image(img1_file_path)
-    obs2 = load_image(img2_file_path)
-    obs3 = load_image(img3_file_path)
-    obs4 = load_image(img4_file_path)
+    # obs1 = load_image(img1_file_path)
+    # obs2 = load_image(img2_file_path)
+    # obs3 = load_image(img3_file_path)
+    # obs4 = load_image(img4_file_path)
+    observed1 = load_image(img1_file_path)
+    observed2 = load_image(img2_file_path)
+    observed3 = load_image(img3_file_path)
+    observed4 = load_image(img4_file_path)
 
     # observed1 = scipy.misc.imresize(obs1, 0.25)
     # observed2 = scipy.misc.imresize(obs2, 0.25)
     # observed3 = scipy.misc.imresize(obs3, 0.25)
     # observed4 = scipy.misc.imresize(obs4, 0.25)
 
-    observed1 = cv2.resize(obs1, (obs1.shape[1]/4, obs1.shape[0]/4))
-    observed2 = cv2.resize(obs2, (obs2.shape[1] / 4, obs2.shape[0] / 4))
-    observed3 = cv2.resize(obs3, (obs3.shape[1] / 4, obs3.shape[0] / 4))
-    observed4 = cv2.resize(obs4, (obs4.shape[1] / 4, obs4.shape[0] / 4))
+    # observed1 = cv2.resize(obs1, (obs1.shape[1]/4, obs1.shape[0]/4))
+    # observed2 = cv2.resize(obs2, (obs2.shape[1] / 4, obs2.shape[0] / 4))
+    # observed3 = cv2.resize(obs3, (obs3.shape[1] / 4, obs3.shape[0] / 4))
+    # observed4 = cv2.resize(obs4, (obs4.shape[1] / 4, obs4.shape[0] / 4))
 
     # draw preparation
     plt.ion()
@@ -656,6 +753,8 @@ if __name__ == '__main__':
 
     start_time = time.time()
     total_time = 0
+
+    drawfig(0)
 
     #package the info
     obs = []
@@ -788,6 +887,8 @@ if __name__ == '__main__':
         crn4.camera = ProjectPoints(v=V_row, rt=rt4, t=t4, f=ch.array([f, f]),
                                     c=ch.array([w, h]) / 2.,
                                     k=ch.zeros(5))
+
+        drawfig(1)
 
         #individual tooth pose estimation
         for i in range(numTooth):
@@ -1014,18 +1115,18 @@ if __name__ == '__main__':
             axarr[1, 0].imshow(rn3_dc + ob3_dc)
             axarr[1, 1].imshow(rn4_dc + ob4_dc)
 
-            scipy.misc.imsave('result/log/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
-            scipy.misc.imsave('result/log/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
-            scipy.misc.imsave('result/log/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
-            scipy.misc.imsave('result/log/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
-            scipy.misc.imsave('result/log/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
-            scipy.misc.imsave('result/log/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
+            scipy.misc.imsave('result/log2/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
+            scipy.misc.imsave('result/log2/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
+            scipy.misc.imsave('result/log2/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
+            scipy.misc.imsave('result/log2/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
+            scipy.misc.imsave('result/log2/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
+            scipy.misc.imsave('result/log2/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
+            scipy.misc.imsave('result/log2/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
+            scipy.misc.imsave('result/log2/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
+            scipy.misc.imsave('result/log2/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
+            scipy.misc.imsave('result/log2/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
+            scipy.misc.imsave('result/log2/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
+            scipy.misc.imsave('result/log2/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
 
             print("tooth id: %d error: %f --- %s seconds ---" % (i, err, time.time() - start_time))
             total_time += (time.time() - start_time)
@@ -1034,10 +1135,11 @@ if __name__ == '__main__':
             plt.pause(5)
 
     print("total time --- %s seconds ---" % (total_time))
-    Mesh.save_to_obj('result/V_row_opw.obj', V_row, row_mesh.f)
+    Mesh.save_to_obj('result/V_row_opw1.obj', V_row, row_mesh.f)
 
     for i in range(numTooth):
-        Mesh.save_to_obj('result/individual_tooth/V_row{}.obj'.format(i), Vi_list[i], teeth_row_mesh.mesh_list[i].f)
+        Mesh.save_to_obj('result/individual_tooth1/V_row{}.obj'.format(i), Vi_list[i], teeth_row_mesh.mesh_list[i].f)
+
 
 
     # observed5 = load_image(img5_file_path)

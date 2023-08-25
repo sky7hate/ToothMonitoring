@@ -22,13 +22,13 @@ from scipy.spatial.transform import Rotation as R
 
 if __name__ == '__main__':
 
-    teeth_file_folder = '/home/jiaming/MultiviewFitting/data/upper_segmented/HBF_12681/before'
+    teeth_file_folder = 'data/raw_model/HBF_12681/before'
     # teeth_file_folder = 'data/from GuMin/seg/model_0'
-    moved_mesh_folder = '/home/jiaming/MultiviewFitting/data/observation/12681/movedRow_real1.obj'
-    img1_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc1.jpg'
-    img2_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc2.jpg'
-    img3_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc3.jpg'
-    img4_file_path = '/home/jiaming/MultiviewFitting/data/observation/12681/real_rc4.jpg'
+    # moved_mesh_folder = '/home/jiaming/MultiviewFitting/data/observation/12681/movedRow_real1.obj'
+    img1_file_path = 'data/observation/12681/real_rc1.jpg'
+    img2_file_path = 'data/observation/12681/real_rc2.jpg'
+    img3_file_path = 'data/observation/12681/real_rc3.jpg'
+    img4_file_path = 'data/observation/12681/real_rc4.jpg'
     # img5_file_path = 'data/observation/contour_4.jpg'
 
     print(teeth_file_folder)
@@ -36,7 +36,7 @@ if __name__ == '__main__':
     teeth_row_mesh = Mesh.TeethRowMesh(teeth_file_folder, False)
     row_mesh = teeth_row_mesh.row_mesh
 
-    moved_mesh = Mesh.TeethRowMesh(moved_mesh_folder, True)
+    # moved_mesh = Mesh.TeethRowMesh(moved_mesh_folder, True)
     # t0 = ch.asarray(teeth_row_mesh.positions_in_row)
 
     numTooth = len(teeth_row_mesh.mesh_list)

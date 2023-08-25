@@ -38,7 +38,7 @@ import os
 from opendr.dummy import Minimal
 
 class TeethRowMesh(object):
-    def __init__(self, folder, moved, normalized = True):
+    def __init__(self, folder, part = 0, numu = 14, moved = False, normalized = True):
         if moved == True:
             self.file_name_list = folder
             self.row_mesh = self.load(self.file_name_list)
@@ -49,7 +49,7 @@ class TeethRowMesh(object):
             self.file_name_list = glob.glob(folder+'/*.ply')
             self.file_name_list.sort()
             self.mesh_list = [self.load(f) for f in self.file_name_list]
-            self.row_mesh = self.get_teethrow_mesh()
+            self.row_mesh = self.get_teethrow_mesh(part, numu)
             self.start_idx_list = []
             self.faces_num = []
             self.max_v = np.max(self.row_mesh.v)
@@ -127,7 +127,7 @@ class TeethRowMesh(object):
         self.row_mesh.v /= 2.0
         self.row_mesh.v *= self.max_v
 
-    def get_teethrow_mesh(self):
+    def get_teethrow_mesh(self, part, numu):
         mesh = Minimal()
         # mesh.v = np.asarray(verts, order='C')
         # mesh.v = np.vstack([m.v for i, m in enumerate(self.mesh_list)])
@@ -145,7 +145,10 @@ class TeethRowMesh(object):
             #     i = 1
             # else:
             #     m.vc = m.v * 0. + 1
-            m.vc = m.v * 0 + [0.05*i, 1, 1]
+            if part == 0:
+                m.vc = m.v * 0 + [0.03*i, 1, 1]
+            else:
+                m.vc = m.v * 0 + [0.03 * (i + numu), 1, 1]
             i += 1
             verts_list.append(m.v)
             faces_list.append(m.f + numVerts)
@@ -209,9 +212,12 @@ class TeethRowMesh(object):
         for m in self.mesh_list:
             m.v += row(np.asarray(rt))
 
-    def rotate(self, rv, which=None):
+    def rotate(self, rv, which=None, center = None):
         if which is not None:
-            mean = np.mean(self.mesh_list[which].v, axis=0, keepdims=True)
+            if center is not None:
+                mean = center
+            else:
+                mean = np.mean(self.mesh_list[which].v, axis=0, keepdims=True)
             self.mesh_list[which].v -= mean
             self.mesh_list[which].v = self.mesh_list[which].v.dot(Rodrigues(np.array(rv)))
             # self.mesh_list[which].v = Rodrigues(np.array(rv)).dot(self.mesh_list[which].v)
@@ -268,6 +274,33 @@ def ReadPolyData(file_name):
         # Return a None if the extension is unknown.
         poly_data = None
     return poly_data
+
+
+def merge_mesh(mesh1, mesh2):
+    mesh = Minimal()
+
+    numVerts = 0
+    faces_list = []
+    verts_list = []
+    vc_list = []
+
+    # m.vc = m.v * 0. + 1
+
+    verts_list.append(mesh1.v)
+    faces_list.append(mesh1.f + numVerts)
+    vc_list.append(mesh1.vc)
+    numVerts += mesh1.v.shape[0]
+
+    verts_list.append(mesh2.v)
+    faces_list.append(mesh2.f + numVerts)
+    vc_list.append(mesh2.vc)
+
+    mesh.v = np.vstack(verts_list)
+    mesh.f = np.vstack(faces_list)
+    mesh.vc = np.vstack(vc_list)
+
+    # print('TeethRow with #V={}, #F={}, #vc={}'.format(mesh.v.shape, mesh.f.shape, mesh.vc.shape))
+    return mesh
 
 
 def save_to_obj(filename, verts, faces=None):
