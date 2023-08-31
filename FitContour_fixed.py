@@ -67,7 +67,7 @@ def check_around(colormap, t_id, checkpixel, part = 0, numT = 14):
     return False
 
 
-def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
+def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None, colormap=None, t_id=None):
     # sample ground truth contour points
     gt_pts = []
     index = 0
@@ -94,12 +94,42 @@ def get_pair_pts(gt_contour, sp_pts, ins_pts, pair_id=None):
     tmp_pair.sort()
     mean_dis = np.mean(pair_res, axis=1)[0]
     print mean_dis, tmp_pair[len(tmp_pair) // 2]
-    threshhold = np.min([mean_dis * 2, tmp_pair[len(tmp_pair) // 2] * 2, 12])
+    threshhold = np.min([mean_dis * 2, tmp_pair[len(tmp_pair) // 2] * 2, 10])
+
 
     for i in range(len(pair_res[1])):
         if pair_res[0][i] <= threshhold:
-            pair_pts.append(gt_pts[pair_res[1][i]])
-            new_ins_pts.append(ins_pts[i])
+            if t_id is not None:
+                if t_id < 14:
+                    p_id = t_id + 14
+                else:
+                    p_id = t_id - 14
+                if not check_around(colormap, p_id, gt_pts[pair_res[1][i]]):
+                    # if t_id == 0:
+                    #     if not check_around(colormap, t_id+1, gt_pts[pair_res[1][i]]):
+                    #         pair_pts.append(gt_pts[pair_res[1][i]])
+                    #         new_ins_pts.append(ins_pts[i])
+                    # if t_id == 27:
+                    #     if not check_around(colormap, t_id-1, gt_pts[pair_res[1][i]]):
+                    #         pair_pts.append(gt_pts[pair_res[1][i]])
+                    #         new_ins_pts.append(ins_pts[i])
+                    # if t_id > 0 and t_id < 27:
+                    #     if ((not check_around(colormap, t_id - 1, gt_pts[pair_res[1][i]]))
+                    #             and (not check_around(colormap, t_id+1, gt_pts[pair_res[1][i]]))):
+                    #         pair_pts.append(gt_pts[pair_res[1][i]])
+                    #         new_ins_pts.append(ins_pts[i])
+                    pair_pts.append(gt_pts[pair_res[1][i]])
+                    new_ins_pts.append(ins_pts[i])
+            else:
+                pair_pts.append(gt_pts[pair_res[1][i]])
+                new_ins_pts.append(ins_pts[i])
+        else:
+            if t_id is not None and pair_res[0][i] <= 15:
+                if not (((t_id+1)%7 == 0) or ((t_id+1)%7 == 1)):
+                    if check_around(colormap, t_id-1, gt_pts[pair_res[1][i]])\
+                        or check_around(colormap, t_id+1, gt_pts[pair_res[1][i]]):
+                        pair_pts.append(gt_pts[pair_res[1][i]])
+                        new_ins_pts.append(ins_pts[i])
     print len(pair_pts), 'out of', len(pair_res[1])
 
     # draw_pixel(np.array(gt_contour), pair_pts, s_sp_pts)
@@ -493,18 +523,18 @@ if __name__ == '__main__':
     img4_file_path = r'/home/sky7hate/Project/MultiviewFitting/data/observation/new_seg/bite/gt6n.jpg'
     img5_file_path = r'/home/sky7hate/Project/MultiviewFitting/data/observation/new_seg/bite/gt7n.jpg'
     gt_list = None
-    # rt1 = ch.array([0.3, -1.6, -0.015]) * np.pi / 4
-    # t1 = ch.array([0.557, -0.20, 3.1])
-    # rt2 = ch.array([0.43, 0, 0.03]) * np.pi / 4
-    # t2 = ch.array([0.08, 0.03, 2.9])
-    # rt3 = ch.array([0.5, 1.78, 0.16]) * np.pi / 4
-    # t3 = ch.array([-0.35, -0.28, 3.35])
-    # rt4 = ch.array([-2.36, 0.05, 0.05]) * np.pi / 4
-    # t4 = ch.array([-0.055, -0.39, 2.3])
-    # rt5 = ch.array([1.55, -0.07, 0.05]) * np.pi / 4
-    # t5 = ch.array([0.018, 0.07, 2.25])
-    # w, h = (640, 480)
-    # f = w * 4 / 4.8
+    rt1 = ch.array([0.3, -1.6, -0.015]) * np.pi / 4
+    t1 = ch.array([0.557, -0.20, 3.1])
+    rt2 = ch.array([0.43, 0, 0.03]) * np.pi / 4
+    t2 = ch.array([0.08, 0.03, 2.9])
+    rt3 = ch.array([0.5, 1.78, 0.16]) * np.pi / 4
+    t3 = ch.array([-0.35, -0.28, 3.35])
+    rt4 = ch.array([-2.36, 0.05, 0.05]) * np.pi / 4
+    t4 = ch.array([-0.055, -0.39, 2.3])
+    rt5 = ch.array([1.55, -0.07, 0.05]) * np.pi / 4
+    t5 = ch.array([0.018, 0.07, 2.25])
+    w, h = (640, 480)
+    f = w * 4 / 4.8
 
     # parsing the input arguments
     if args.t_model_u is not None:
@@ -755,7 +785,7 @@ if __name__ == '__main__':
     # obs.append(observed6)
     # obs.append(observed7)
     cb_err = [100000, 100000, 100000, 100000, 100000, 100000, 100000]
-    for iter in range(3):
+    for iter0 in range(3):
         rn_contours = []
         rn_contours.append(rn)
         rn_contours.append(rn2)
@@ -944,12 +974,11 @@ if __name__ == '__main__':
         for i in range(numTooth+numTooth_l):
             err = 100000
             err_dif = 100
+            ab_dif = 100
             iter = 0
             part = 0
             molars = []
-			# set molars[0] = 100 means no molars fixed
-			molars.append(100)
-			# set fixed molars ids
+            molars.append(100)
             # molars.append(numTooth/2 - 2)
             # molars.append(numTooth/2 - 1)
             # molars.append(numTooth - 2)
@@ -1175,7 +1204,7 @@ if __name__ == '__main__':
             # print V_row.shape
             # cur_tooth = V_row[teeth_row_mesh.start_idx_list[i]:teeth_row_mesh.start_idx_list[i+1], 0:3]
             # print cur_tooth.shape
-            while not (err < 1 or err_dif < 0.1 or iter > 20):
+            while not (err < 1 or ab_dif < 0.1 or iter > 20):
                 if i < numTooth:
                     mean = np.mean(Vi_list[i].r, axis=0)
                 else:
@@ -1196,7 +1225,7 @@ if __name__ == '__main__':
                     # if iter == 0:
                     #     Mesh.save_to_obj('result/tooth{}_vertices.obj'.format(i), sp_ins_pts1)
                     cur_time = time.time()
-                    pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1)  # get pairing points
+                    pair_pts1, trim_ins_pts1 = get_pair_pts(observed1, sample_pts1, sp_ins_pts1, t_id=i, colormap=crn.r)  # get pairing points
                     print('pairing time: %s s' % (time.time() - cur_time))
 
                 # intersection_pts1, index_ray1, index_tri1 = pj.back_projection(sample_pts1, rt1, t1, V_row, row_mesh.f)
@@ -1222,7 +1251,7 @@ if __name__ == '__main__':
                     trim_ins_pts2 = []
                 else:
                     sp_ins_pts2 = pj.back_projection_depth(w, h, f, sample_pts2, rt2, t2, drn2.r)
-                    pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2)
+                    pair_pts2, trim_ins_pts2 = get_pair_pts(observed2, sample_pts2, sp_ins_pts2, t_id=i, colormap=crn2.r)
 
                 # intersection_pts2, index_ray2, index_tri2 = pj.back_projection(sample_pts2, rt2, t2, V_row, row_mesh.f)
                 # sp_ins_pts2 = []
@@ -1246,7 +1275,15 @@ if __name__ == '__main__':
                     trim_ins_pts3 = []
                 else:
                     sp_ins_pts3 = pj.back_projection_depth(w, h, f, sample_pts3, rt3, t3, drn3.r)
-                    pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3)
+                    pair_pts3, trim_ins_pts3 = get_pair_pts(observed3, sample_pts3, sp_ins_pts3, t_id=i, colormap=crn3.r)
+
+
+                if len(pair_pts1) > len(pair_pts3):
+                    pair_pts3 = []
+                    trim_ins_pts3 = []
+                else:
+                    pair_pts1 = []
+                    trim_ins_pts1 = []
 
                 # intersection_pts3, index_ray3, index_tri3 = pj.back_projection(sample_pts3, rt3, t3, V_row, row_mesh.f)
                 # sp_ins_pts3 = []
@@ -1270,7 +1307,7 @@ if __name__ == '__main__':
                     trim_ins_pts4 = []
                 else:
                     sp_ins_pts4 = pj.back_projection_depth(w, h, f, sample_pts4, rt4, t4, drn4.r)
-                    pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4)
+                    pair_pts4, trim_ins_pts4 = get_pair_pts(observed4, sample_pts4, sp_ins_pts4, t_id=i, colormap=crn4.r)
 
                 # intersection_pts4, index_ray4, index_tri4 = pj.back_projection(sample_pts4, rt4, t4, V_row, row_mesh.f)
                 # sp_ins_pts4 = []
@@ -1296,7 +1333,7 @@ if __name__ == '__main__':
                     trim_ins_pts5 = []
                 else:
                     sp_ins_pts5 = pj.back_projection_depth(w, h, f, sample_pts5, rt5, t5, drn5.r)
-                    pair_pts5, trim_ins_pts5 = get_pair_pts(observed5, sample_pts5, sp_ins_pts5)
+                    pair_pts5, trim_ins_pts5 = get_pair_pts(observed5, sample_pts5, sp_ins_pts5, t_id=i, colormap=crn5.r)
 
                 # sample_pts6 = get_sample_pts(rn6.r, crn6.r, i)
                 # if len(sample_pts6) < 2:
@@ -1334,7 +1371,8 @@ if __name__ == '__main__':
                 total_pts = len(pair_pts1) + len(pair_pts2) + len(pair_pts3) + len(pair_pts4) + len(pair_pts5)
                 cur_time = time.time()
                 err_dif = err - out.chisqr / total_pts
-                if (err_dif > 0):
+                ab_dif = np.abs(err_dif)
+                if (err_dif > 0 or ab_dif <= 0.4):
                     err = out.chisqr / total_pts
                     # out.params.pretty_print()
                     tmprt = np.array([out.params['rtx'], out.params['rty'], out.params['rtz']])
@@ -1354,9 +1392,10 @@ if __name__ == '__main__':
                         # Vi_list_l[i-numTooth] = (Vi_list_l[i-numTooth] - mean).dot(Rodrigues(tmprt)) + mean + tmpt
                         Vi_list_l = [ch.array(teeth_row_mesh_l.mesh_list[k].v) for k in range(numTooth_l)]
                         V_row_l = ch.vstack([Vi_list_l[k] for k in range(numTooth_l)])
-                    merged_mesh = Mesh.merge_mesh(row_mesh, row_mesh_l)
+                    merged_mesh = Mesh.merge_mesh(teeth_row_mesh.row_mesh, teeth_row_mesh_l.row_mesh)
                     V_row_bite = ch.array(merged_mesh.v)
-
+                else:
+                    ab_dif = 0
                 print out.message, out.chisqr, out.chisqr / total_pts
 
                 # reproject 2D contour
@@ -1435,6 +1474,7 @@ if __name__ == '__main__':
                 # break
                 iter += 1
 
+
             # draw contours of different views
             if axarr is None:
                 fig, axarr = plt.subplots(2, 2, sharex='col', sharey='row', gridspec_kw={'wspace': 0, 'hspace': 0})
@@ -1458,27 +1498,28 @@ if __name__ == '__main__':
             # rn7_dc[rn7_dc[:, :, 0] > 0] *= [1, 0, 0]
 
             axarr[0, 0].imshow(rn1_dc + ob1_dc)
-            axarr[0, 1].imshow(rn2_dc + ob2_dc)
+            axarr[0, 1].imshow(rn3_dc + ob3_dc)
             # axarr[0, 2].imshow(rn4_dc + ob4_dc)
             axarr[1, 0].imshow(rn4_dc + ob4_dc)
             axarr[1, 1].imshow(rn5_dc + ob5_dc)
             # axarr[1, 2].imshow(rn7_dc + ob7_dc)
 
-            scipy.misc.imsave('result/log_bite/fittingresult1_iter{}.jpg'.format(i), rn1_dc + ob1_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult1_iter{}a.jpg'.format(i), rn1_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult1_iter{}b.jpg'.format(i), ob1_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult2_iter{}.jpg'.format(i), rn2_dc + ob2_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult2_iter{}a.jpg'.format(i), rn2_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult2_iter{}b.jpg'.format(i), ob2_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult3_iter{}.jpg'.format(i), rn3_dc + ob3_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult3_iter{}a.jpg'.format(i), rn3_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult3_iter{}b.jpg'.format(i), ob3_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult4_iter{}.jpg'.format(i), rn4_dc + ob4_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult4_iter{}a.jpg'.format(i), rn4_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult4_iter{}b.jpg'.format(i), ob4_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult5_iter{}.jpg'.format(i), rn5_dc + ob5_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult5_iter{}a.jpg'.format(i), rn5_dc)
-            scipy.misc.imsave('result/log_bite/fittingresult5_iter{}b.jpg'.format(i), ob5_dc)
+            # if (iter0 == 0):
+            scipy.misc.imsave('result/log_bite/fittingresult1_iter{}.jpg'.format(i+iter0*28), rn1_dc + ob1_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult1_iter{}a.jpg'.format(i+iter0*28), rn1_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult1_iter{}b.jpg'.format(i+iter0*28), ob1_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult2_iter{}.jpg'.format(i+iter0*28), rn2_dc + ob2_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult2_iter{}a.jpg'.format(i+iter0*28), rn2_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult2_iter{}b.jpg'.format(i+iter0*28), ob2_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult3_iter{}.jpg'.format(i+iter0*28), rn3_dc + ob3_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult3_iter{}a.jpg'.format(i+iter0*28), rn3_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult3_iter{}b.jpg'.format(i+iter0*28), ob3_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult4_iter{}.jpg'.format(i+iter0*28), rn4_dc + ob4_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult4_iter{}a.jpg'.format(i+iter0*28), rn4_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult4_iter{}b.jpg'.format(i+iter0*28), ob4_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult5_iter{}.jpg'.format(i+iter0*28), rn5_dc + ob5_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult5_iter{}a.jpg'.format(i+iter0*28), rn5_dc)
+            scipy.misc.imsave('result/log_bite/fittingresult5_iter{}b.jpg'.format(i+iter0*28), ob5_dc)
             # scipy.misc.imsave('result/log_bite/fittingresult6_iter{}.jpg'.format(i), rn6_dc + ob6_dc)
             # scipy.misc.imsave('result/log_bite/fittingresult6_iter{}a.jpg'.format(i), rn6_dc)
             # scipy.misc.imsave('result/log_bite/fittingresult6_iter{}b.jpg'.format(i), ob6_dc)
